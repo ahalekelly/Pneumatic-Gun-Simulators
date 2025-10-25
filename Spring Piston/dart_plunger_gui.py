@@ -358,15 +358,19 @@ class DartPlungerSimulatorGUI:
         """Define the system of first-order ODEs"""
         d1, d2, p1, p2 = x  # dart and plunger variables
         
-        # Calculate areas
+        # Calculate areas and precompute constants
         area_b = np.pi * (self.params['D_b']**2) / 4
         area_p = np.pi * (self.params['D_p']**2) / 4
         v_0 = self.params['L_0'] * area_p
         xsf = self.params['xso'] + self.params['L_0']
+
+        # Enforce mechanical stop in the upper direction
+        p1_effective = min(p1, self.params['L_0'])
+        plunger_at_stop = p1 >= self.params['L_0'] and p2 >= 0
         
         # Internal pressure calculation (with safety checks)
         volume_ratio = np.maximum(
-            ((self.params['L_0'] - p1) * area_p + d1 * area_b) / v_0,
+            ((self.params['L_0'] - p1_effective) * area_p + d1 * area_b) / v_0,
             1e-10  # Prevent division by zero
         )
         p_t = self.params['p_0'] / (volume_ratio ** self.params['gamma'])
@@ -376,9 +380,13 @@ class DartPlungerSimulatorGUI:
         dp1dt = p2  # plunger velocity
         
         # Accelerations
-        dp2dt = ((self.params['p_2'] - p_t) * area_p + 
-                self.params['k'] * (xsf - p1)) / self.params['mass_p']
+        spring_force = self.params['k'] * (xsf - p1_effective)
+        dp2dt = ((self.params['p_2'] - p_t) * area_p + spring_force) / self.params['mass_p']
         dd2dt = ((p_t - self.params['p_2']) * area_b) / self.params['mass_d']
+
+        if plunger_at_stop and dp1dt > 0:
+            dp1dt = 0.0
+            dp2dt = min(dp2dt, 0.0)
         
         return [dd1dt, dd2dt, dp1dt, dp2dt]
         
@@ -398,7 +406,10 @@ class DartPlungerSimulatorGUI:
                 raise Exception("ODE solver failed")
             
             # Extract results
-            d1_pos, d1_vel, p1_pos, p1_vel = sol.y
+            d1_pos, d1_vel, p1_pos_raw, p1_vel_raw = sol.y
+            overshoot_mask = p1_pos_raw >= self.params['L_0']
+            p1_pos = np.where(overshoot_mask, self.params['L_0'], p1_pos_raw)
+            p1_vel = np.where(overshoot_mask & (p1_vel_raw > 0), 0.0, p1_vel_raw)
             time_ms = sol.t * MS_PER_S
             
             # Calculate derived quantities
