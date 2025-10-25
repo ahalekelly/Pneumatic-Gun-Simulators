@@ -10,6 +10,13 @@ import threading
 import pickle
 from pathlib import Path
 
+MM_PER_METER = 1000.0
+GRAMS_PER_KG = 1000.0
+FPS_PER_MPS = 3.280839895013123
+BAR_PER_PASCAL = 1e-5
+ML_PER_M3 = 1_000_000.0
+MS_PER_S = 1000.0
+
 class DartPlungerSimulatorGUI:
     def __init__(self, root):
         self.root = root
@@ -41,6 +48,17 @@ class DartPlungerSimulatorGUI:
             'k': 523 * (11/5),      # Spring constant (N/m)
             'end_time': 0.02,       # Simulation end time (s)
             'n_points': 1500        # Number of evaluation points
+        }
+        self.display_converters = {
+            'p_0': (lambda v: v * BAR_PER_PASCAL, lambda v: v / BAR_PER_PASCAL),
+            'p_2': (lambda v: v * BAR_PER_PASCAL, lambda v: v / BAR_PER_PASCAL),
+            'D_b': (lambda v: v * MM_PER_METER, lambda v: v / MM_PER_METER),
+            'D_p': (lambda v: v * MM_PER_METER, lambda v: v / MM_PER_METER),
+            'mass_d': (lambda v: v * GRAMS_PER_KG, lambda v: v / GRAMS_PER_KG),
+            'mass_p': (lambda v: v * GRAMS_PER_KG, lambda v: v / GRAMS_PER_KG),
+            'xso': (lambda v: v * MM_PER_METER, lambda v: v / MM_PER_METER),
+            'L_0': (lambda v: v * MM_PER_METER, lambda v: v / MM_PER_METER),
+            'end_time': (lambda v: v * MS_PER_S, lambda v: v / MS_PER_S),
         }
         self.current_param_file = None
         
@@ -79,19 +97,19 @@ class DartPlungerSimulatorGUI:
         
         # Parameter definitions
         param_info = {
-            'p_0': ('Initial Pressure (Pa)', 50000, 200000),
-            'p_2': ('Ambient Pressure (Pa)', 50000, 200000),
-            'D_b': ('Barrel Diameter (m)', 0.005, 0.02),
-            'D_p': ('Plunger Diameter (m)', 0.02, 0.05),
+            'p_0': ('Initial Pressure (bar)', 0.5, 2.0),
+            'p_2': ('Ambient Pressure (bar)', 0.5, 2.0),
+            'D_b': ('Barrel Diameter (mm)', 5, 20),
+            'D_p': ('Plunger Diameter (mm)', 20, 50),
             'gamma': ('Adiabatic Index', 1.0, 2.0),
-            'mass_d': ('Dart Mass (kg)', 0.0005, 0.005),
-            'mass_p': ('Plunger Mass (kg)', 0.01, 0.2),
+            'mass_d': ('Dart Mass (g)', 0.5, 5),
+            'mass_p': ('Plunger Mass (g)', 10, 200),
             'fric1': ('Static Friction (N)', 0, 2),
             'fric2': ('Dynamic Friction (N)', 0, 1),
-            'xso': ('Spring Precompression (m)', 0.01, 0.05),
-            'L_0': ('Initial Plunger Length (m)', 0.05, 0.2),
+            'xso': ('Spring Precompression (mm)', 10, 50),
+            'L_0': ('Initial Plunger Length (mm)', 50, 200),
             'k': ('Spring Constant (N/m)', 100, 2000),
-            'end_time': ('End Time (s)', 0.005, 0.1),
+            'end_time': ('End Time (ms)', 5, 100),
             'n_points': ('Number of Points', 500, 3000)
         }
         
@@ -105,7 +123,8 @@ class DartPlungerSimulatorGUI:
             ttk.Label(param_frame, text=label, width=22).pack(side=tk.LEFT)
             
             # Entry with larger font for readability
-            var = tk.DoubleVar(value=self.params[key])
+            display_value = self._param_to_display(key, self.params[key])
+            var = tk.DoubleVar(value=display_value)
             self.param_vars[key] = var
             
             entry = ttk.Entry(param_frame, textvariable=var, width=12, font=('Arial', 10))
@@ -228,6 +247,7 @@ class DartPlungerSimulatorGUI:
             
             # Extract results
             d1_pos, d1_vel, p1_pos, p1_vel = sol.y
+            time_ms = sol.t * MS_PER_S
             
             # Calculate derived quantities
             area_b = np.pi * (self.params['D_b']**2) / 4
@@ -243,6 +263,14 @@ class DartPlungerSimulatorGUI:
             p_t_array = self.params['p_0'] / (volume_ratio ** self.params['gamma'])
             v_t_array = (self.params['L_0'] - p1_pos) * area_p + area_b * d1_pos
             spring_force = self.params['k'] * (xsf - p1_pos)
+
+            # Prepare data in display units
+            d1_pos_mm = d1_pos * MM_PER_METER
+            d1_vel_fps = d1_vel * FPS_PER_MPS
+            p1_pos_mm = p1_pos * MM_PER_METER
+            p1_vel_fps = p1_vel * FPS_PER_MPS
+            p_t_bar = p_t_array * BAR_PER_PASCAL
+            v_t_ml = v_t_array * ML_PER_M3
             
             # Clear and plot with large, readable formatting
             for ax in self.axes:
@@ -250,34 +278,38 @@ class DartPlungerSimulatorGUI:
             
             # Configure all axes for maximum readability
             plot_configs = [
-                (d1_pos, 'Dart Position', 'Position (m)', 'blue'),
-                (d1_vel, 'Dart Velocity', 'Velocity (m/s)', 'red'),
-                (p1_pos, 'Plunger Position', 'Position (m)', 'green'),
-                (p1_vel, 'Plunger Velocity', 'Velocity (m/s)', 'magenta'),
-                (p_t_array, 'System Pressure', 'Pressure (Pa)', 'cyan'),
-                (v_t_array, 'System Volume', 'Volume (m³)', 'orange')
+                (d1_pos_mm, 'Dart Position', 'Position (mm)', 'blue'),
+                (d1_vel_fps, 'Dart Velocity', 'Velocity (fps)', 'red'),
+                (p1_pos_mm, 'Plunger Position', 'Position (mm)', 'green'),
+                (p1_vel_fps, 'Plunger Velocity', 'Velocity (fps)', 'magenta'),
+                (p_t_bar, 'System Pressure', 'Pressure (bar)', 'cyan'),
+                (v_t_ml, 'System Volume', 'Volume (mL)', 'orange')
             ]
             
             for i, (data, title, ylabel, color) in enumerate(plot_configs):
                 ax = self.axes[i]
-                ax.plot(sol.t, data, color=color, linewidth=3)
+                ax.plot(time_ms, data, color=color, linewidth=3)
                 ax.set_title(f'{title} vs Time', fontsize=14, fontweight='bold')
-                ax.set_xlabel('Time (s)', fontsize=12)
+                ax.set_xlabel('Time (ms)', fontsize=12)
                 ax.set_ylabel(ylabel, fontsize=12)
                 ax.grid(True, alpha=0.3)
                 ax.tick_params(axis='both', labelsize=11)
                 ax.tick_params(axis='x', labelrotation=0)
-                ax.set_xlim(left=0, right=self.params['end_time'])
+                ax.set_xlim(left=0, right=self.params['end_time'] * MS_PER_S)
                 if np.nanmin(data) >= 0:
                     ax.set_ylim(bottom=0)
 
-                # Keep y-axis readable while limiting crowded x-axis ticks
-                ax.ticklabel_format(style='scientific', scilimits=(-3, 3), axis='y')
+                # Keep both axes in plain notation
+                x_formatter = ScalarFormatter(useMathText=False)
+                x_formatter.set_scientific(False)
+                x_formatter.set_useOffset(False)
+                ax.xaxis.set_major_formatter(x_formatter)
+
+                y_formatter = ScalarFormatter(useMathText=False)
+                y_formatter.set_scientific(False)
+                y_formatter.set_useOffset(False)
+                ax.yaxis.set_major_formatter(y_formatter)
                 ax.xaxis.set_major_locator(MaxNLocator(nbins=5))
-                time_formatter = ScalarFormatter(useMathText=True)
-                time_formatter.set_powerlimits((-3, 3))
-                time_formatter.set_useOffset(False)
-                ax.xaxis.set_major_formatter(time_formatter)
             
             self.canvas.draw()
             
@@ -293,30 +325,43 @@ class DartPlungerSimulatorGUI:
     
     def update_results_summary(self, sol, d1_pos, d1_vel, p1_pos, p1_vel, p_t_array, v_t_array):
         """Update the results text widget"""
+        final_dart_pos_mm = d1_pos[-1] * MM_PER_METER
+        final_dart_vel_fps = d1_vel[-1] * FPS_PER_MPS
+        max_dart_vel_fps = np.max(d1_vel) * FPS_PER_MPS
+
+        final_plunger_pos_mm = p1_pos[-1] * MM_PER_METER
+        final_plunger_vel_fps = p1_vel[-1] * FPS_PER_MPS
+        max_plunger_vel_fps = np.max(np.abs(p1_vel)) * FPS_PER_MPS
+
+        final_pressure_bar = p_t_array[-1] * BAR_PER_PASCAL
+        min_pressure_bar = np.min(p_t_array) * BAR_PER_PASCAL
+        final_volume_ml = v_t_array[-1] * ML_PER_M3
+        max_volume_ml = np.max(v_t_array) * ML_PER_M3
+
         results = f"""SIMULATION RESULTS
 {'='*40}
-Time: {self.params['end_time']:.4f} s
+Time: {self.params['end_time'] * MS_PER_S:.3f} ms
 Points: {len(sol.t)}
 Success: {sol.success}
 
 DART RESULTS
 {'-'*20}
-Final Position: {d1_pos[-1]:.6f} m
-Final Velocity: {d1_vel[-1]:.3f} m/s
-Max Velocity: {np.max(d1_vel):.3f} m/s
+Final Position: {final_dart_pos_mm:.3f} mm
+Final Velocity: {final_dart_vel_fps:.3f} fps
+Max Velocity: {max_dart_vel_fps:.3f} fps
 
 PLUNGER RESULTS  
 {'-'*20}
-Final Position: {p1_pos[-1]:.6f} m
-Final Velocity: {p1_vel[-1]:.3f} m/s
-Max Velocity: {np.max(np.abs(p1_vel)):.3f} m/s
+Final Position: {final_plunger_pos_mm:.3f} mm
+Final Velocity: {final_plunger_vel_fps:.3f} fps
+Max Velocity: {max_plunger_vel_fps:.3f} fps
 
 SYSTEM RESULTS
 {'-'*20}
-Final Pressure: {p_t_array[-1]:.0f} Pa
-Min Pressure: {np.min(p_t_array):.0f} Pa
-Final Volume: {v_t_array[-1]:.2e} m³
-Max Volume: {np.max(v_t_array):.2e} m³
+Final Pressure: {final_pressure_bar:.3f} bar
+Min Pressure: {min_pressure_bar:.3f} bar
+Final Volume: {final_volume_ml:.3f} mL
+Max Volume: {max_volume_ml:.3f} mL
 """
         
         self.results_text.delete(1.0, tk.END)
@@ -386,7 +431,8 @@ Max Volume: {np.max(v_t_array):.2e} m³
         
         for key, value in self.params.items():
             try:
-                self.param_vars[key].set(value)
+                display_value = self._param_to_display(key, value)
+                self.param_vars[key].set(display_value)
             except tk.TclError:
                 messagebox.showerror("Error", f"Invalid value for parameter '{key}': {value}")
                 self.status_label.config(text="Parameter load failed", foreground="red")
@@ -399,7 +445,24 @@ Max Volume: {np.max(v_t_array):.2e} m³
     def _update_params_from_vars(self):
         """Sync internal param dict from GUI variables"""
         for key, var in self.param_vars.items():
-            self.params[key] = var.get()
+            display_value = var.get()
+            self.params[key] = self._param_from_display(key, display_value)
+
+    def _param_to_display(self, key, value):
+        """Convert internal SI value to display units"""
+        converter = self.display_converters.get(key)
+        if converter:
+            to_display, _ = converter
+            return to_display(value)
+        return value
+
+    def _param_from_display(self, key, value):
+        """Convert display units to internal SI value"""
+        converter = self.display_converters.get(key)
+        if converter:
+            _, to_internal = converter
+            return to_internal(value)
+        return value
     
     def _update_file_label(self, file_path):
         """Update the label showing the current parameter file name"""
