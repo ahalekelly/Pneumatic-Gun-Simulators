@@ -69,21 +69,9 @@ class DartPlungerSimulatorGUI:
                                font=('Arial', 16, 'bold'))
         title_label.pack(pady=(0, 15))
         
-        # Create scrollable parameter frame
-        canvas = tk.Canvas(parent, height=500, width=330)
-        scrollbar = ttk.Scrollbar(parent, orient="vertical", command=canvas.yview)
-        scrollable_frame = ttk.Frame(canvas)
-        
-        scrollable_frame.bind(
-            "<Configure>",
-            lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
-        )
-        
-        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
-        canvas.configure(yscrollcommand=scrollbar.set)
-        
-        canvas.pack(side="left", fill="both", expand=True)
-        scrollbar.pack(side="right", fill="y")
+        # Create parameter frame (no scrolling needed)
+        params_container = ttk.Frame(parent)
+        params_container.pack(fill=tk.X, expand=False)
         
         # Parameter definitions
         param_info = {
@@ -106,7 +94,7 @@ class DartPlungerSimulatorGUI:
         self.param_vars = {}
         
         for key, (label, min_val, max_val) in param_info.items():
-            param_frame = ttk.Frame(scrollable_frame)
+            param_frame = ttk.Frame(params_container)
             param_frame.pack(fill=tk.X, pady=3)
             
             # Label with fixed width
@@ -120,25 +108,24 @@ class DartPlungerSimulatorGUI:
             entry.pack(side=tk.LEFT, padx=5)
             entry.bind('<Return>', lambda e: self.run_simulation_threaded())
         
-        # Buttons with larger spacing
+        # Action buttons
         button_frame = ttk.Frame(parent)
-        button_frame.pack(pady=20, fill=tk.X)
+        button_frame.pack(pady=10, fill=tk.X)
         
-        run_button = ttk.Button(button_frame, text="🚀 Run Simulation", 
+        run_button = ttk.Button(button_frame, text="Run Simulation", 
                                command=self.run_simulation_threaded)
         run_button.pack(fill=tk.X, pady=5)
-        
-        reset_button = ttk.Button(button_frame, text="🔄 Reset Defaults", 
-                                 command=self.reset_parameters)
-        reset_button.pack(fill=tk.X, pady=5)
         
         # Results display
         results_label = ttk.Label(parent, text="Results Summary:", font=('Arial', 12, 'bold'))
         results_label.pack(pady=(20, 5))
         
-        self.results_text = scrolledtext.ScrolledText(parent, height=8, width=40, 
+        results_container = ttk.Frame(parent)
+        results_container.pack(fill=tk.BOTH, expand=True, pady=5)
+
+        self.results_text = scrolledtext.ScrolledText(results_container, width=40, 
                                                      font=('Courier', 9))
-        self.results_text.pack(fill=tk.X, pady=5)
+        self.results_text.pack(fill=tk.BOTH, expand=True)
         
         # Status
         self.status_label = ttk.Label(parent, text="Ready", foreground="green", 
@@ -277,12 +264,12 @@ class DartPlungerSimulatorGUI:
             # Update results summary
             self.update_results_summary(sol, d1_pos, d1_vel, p1_pos, p1_vel, p_t_array, v_t_array)
             
-            self.status_label.config(text="✅ Simulation completed successfully", 
+            self.status_label.config(text="Simulation completed successfully", 
                                    foreground="green")
             
         except Exception as e:
             messagebox.showerror("Error", f"Simulation failed: {str(e)}")
-            self.status_label.config(text="❌ Simulation failed", foreground="red")
+            self.status_label.config(text="Simulation failed", foreground="red")
     
     def update_results_summary(self, sol, d1_pos, d1_vel, p1_pos, p1_vel, p_t_array, v_t_array):
         """Update the results text widget"""
@@ -317,27 +304,20 @@ Max Volume: {np.max(v_t_array):.2e} m³
     
     def run_simulation_threaded(self):
         """Run simulation in thread to prevent GUI freezing"""
-        self.status_label.config(text="🔄 Running simulation...", foreground="orange")
+        self.status_label.config(text="Running simulation...", foreground="orange")
         thread = threading.Thread(target=self.run_simulation)
         thread.daemon = True
         thread.start()
-    
-    def reset_parameters(self):
-        """Reset to default values"""
-        defaults = {
-            'p_0': 101325, 'p_2': 101325, 'D_b': 0.0127, 'D_p': 0.035052,
-            'gamma': 1.4, 'mass_d': 0.0012, 'mass_p': 0.06, 'fric1': 0.4,
-            'fric2': 0.2, 'xso': 0.0254, 'L_0': 0.1016, 'k': 523 * (11/5),
-            'end_time': 0.02, 'n_points': 1500
-        }
-        
-        for key, value in defaults.items():
-            self.param_vars[key].set(value)
-        
-        self.run_simulation_threaded()
 
 def main():
     root = tk.Tk()
+    root.lift()
+    root.focus_force()
+    try:
+        root.attributes("-topmost", True)
+        root.after(100, lambda: root.attributes("-topmost", False))
+    except tk.TclError:
+        pass
     app = DartPlungerSimulatorGUI(root)
     root.mainloop()
 
