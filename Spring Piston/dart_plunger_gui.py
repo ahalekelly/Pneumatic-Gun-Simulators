@@ -2,10 +2,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
+from matplotlib.ticker import MaxNLocator, ScalarFormatter
 from scipy.integrate import solve_ivp
 import tkinter as tk
-from tkinter import ttk, messagebox, scrolledtext
+from tkinter import ttk, messagebox, scrolledtext, filedialog
 import threading
+import pickle
+from pathlib import Path
 
 class DartPlungerSimulatorGUI:
     def __init__(self, root):
@@ -39,6 +42,7 @@ class DartPlungerSimulatorGUI:
             'end_time': 0.02,       # Simulation end time (s)
             'n_points': 1500        # Number of evaluation points
         }
+        self.current_param_file = None
         
         self.setup_gui()
         self.run_simulation()  # Initial simulation
@@ -112,9 +116,18 @@ class DartPlungerSimulatorGUI:
         button_frame = ttk.Frame(parent)
         button_frame.pack(pady=10, fill=tk.X)
         
+        load_button = ttk.Button(button_frame, text="Load", command=self.load_parameters)
+        load_button.pack(side=tk.LEFT, expand=True, fill=tk.X, padx=(0, 5))
+        
+        save_button = ttk.Button(button_frame, text="Save", command=self.save_parameters)
+        save_button.pack(side=tk.LEFT, expand=True, fill=tk.X, padx=5)
+        
         run_button = ttk.Button(button_frame, text="Run Simulation", 
                                command=self.run_simulation_threaded)
-        run_button.pack(fill=tk.X, pady=5)
+        run_button.pack(side=tk.LEFT, expand=True, fill=tk.X, padx=(5, 0))
+        
+        self.file_label = ttk.Label(parent, text="No parameter file selected")
+        self.file_label.pack(fill=tk.X, pady=(0, 10))
         
         # Results display
         results_label = ttk.Label(parent, text="Results Summary:", font=('Arial', 12, 'bold'))
@@ -135,7 +148,6 @@ class DartPlungerSimulatorGUI:
     def create_plots(self, parent):
         # Create very large matplotlib figure for maximum readability
         self.fig = Figure(figsize=(16, 12), dpi=100)
-        self.fig.suptitle('Dart-Plunger Springer Simulation Results', fontsize=20, fontweight='bold')
         
         # Create 3x2 subplot layout with generous spacing
         self.axes = []
@@ -146,11 +158,11 @@ class DartPlungerSimulatorGUI:
         # Adjust subplot parameters for maximum readability
         self.fig.subplots_adjust(
             left=0.08,      # Left margin
-            bottom=0.08,    # Bottom margin  
+            bottom=0.07,    # Bottom margin  
             right=0.95,     # Right margin
-            top=0.92,       # Top margin
-            wspace=0.25,    # Width spacing between subplots
-            hspace=0.35     # Height spacing between subplots
+            top=0.93,       # Top margin
+            wspace=0.3,     # Width spacing between subplots
+            hspace=0.6      # Height spacing between subplots
         )
         
         # Embed in tkinter with scrollbars if needed
@@ -202,8 +214,7 @@ class DartPlungerSimulatorGUI:
     def run_simulation(self):
         try:
             # Update parameters
-            for key, var in self.param_vars.items():
-                self.params[key] = var.get()
+            self._update_params_from_vars()
             
             # Solve ODE
             x0 = [0, 0, 0, 0]
@@ -254,10 +265,19 @@ class DartPlungerSimulatorGUI:
                 ax.set_xlabel('Time (s)', fontsize=12)
                 ax.set_ylabel(ylabel, fontsize=12)
                 ax.grid(True, alpha=0.3)
-                ax.tick_params(labelsize=11)
-                
-                # Use scientific notation for small/large numbers
-                ax.ticklabel_format(style='scientific', scilimits=(-3, 3))
+                ax.tick_params(axis='both', labelsize=11)
+                ax.tick_params(axis='x', labelrotation=0)
+                ax.set_xlim(left=0, right=self.params['end_time'])
+                if np.nanmin(data) >= 0:
+                    ax.set_ylim(bottom=0)
+
+                # Keep y-axis readable while limiting crowded x-axis ticks
+                ax.ticklabel_format(style='scientific', scilimits=(-3, 3), axis='y')
+                ax.xaxis.set_major_locator(MaxNLocator(nbins=5))
+                time_formatter = ScalarFormatter(useMathText=True)
+                time_formatter.set_powerlimits((-3, 3))
+                time_formatter.set_useOffset(False)
+                ax.xaxis.set_major_formatter(time_formatter)
             
             self.canvas.draw()
             
@@ -308,6 +328,87 @@ Max Volume: {np.max(v_t_array):.2e} m³
         thread = threading.Thread(target=self.run_simulation)
         thread.daemon = True
         thread.start()
+    
+    def save_parameters(self):
+        """Save current parameters to a pickle file"""
+        try:
+            self._update_params_from_vars()
+        except tk.TclError as e:
+            messagebox.showerror("Error", f"Invalid parameter value: {e}")
+            return
+        
+        file_path = filedialog.asksaveasfilename(
+            title="Save Parameter Set",
+            defaultextension=".pkl",
+            filetypes=[("Pickle files", "*.pkl"), ("All files", "*.*")]
+        )
+        if not file_path:
+            return
+        
+        try:
+            with open(file_path, 'wb') as outfile:
+                pickle.dump(self.params, outfile)
+            self._update_file_label(file_path)
+            self.status_label.config(text="Parameters saved successfully", foreground="green")
+        except Exception as exc:
+            messagebox.showerror("Error", f"Failed to save parameters: {exc}")
+            self.status_label.config(text="Parameter save failed", foreground="red")
+    
+    def load_parameters(self):
+        """Load parameters from a pickle file and rerun the simulation"""
+        file_path = filedialog.askopenfilename(
+            title="Load Parameter Set",
+            filetypes=[("Pickle files", "*.pkl *.pickle"), ("All files", "*.*")]
+        )
+        if not file_path:
+            return
+        
+        try:
+            with open(file_path, 'rb') as infile:
+                loaded_params = pickle.load(infile)
+        except Exception as exc:
+            messagebox.showerror("Error", f"Failed to load parameters: {exc}")
+            self.status_label.config(text="Parameter load failed", foreground="red")
+            return
+        
+        if not isinstance(loaded_params, dict):
+            messagebox.showerror("Error", "Loaded file does not contain a valid parameter set.")
+            self.status_label.config(text="Parameter load failed", foreground="red")
+            return
+        
+        missing_keys = [key for key in self.params if key not in loaded_params]
+        if missing_keys:
+            messagebox.showerror("Error", f"Loaded parameter set is missing keys: {', '.join(missing_keys)}")
+            self.status_label.config(text="Parameter load failed", foreground="red")
+            return
+        
+        self.params.update(loaded_params)
+        
+        for key, value in self.params.items():
+            try:
+                self.param_vars[key].set(value)
+            except tk.TclError:
+                messagebox.showerror("Error", f"Invalid value for parameter '{key}': {value}")
+                self.status_label.config(text="Parameter load failed", foreground="red")
+                return
+        
+        self._update_file_label(file_path)
+        self.status_label.config(text="Parameters loaded successfully", foreground="green")
+        self.run_simulation_threaded()
+    
+    def _update_params_from_vars(self):
+        """Sync internal param dict from GUI variables"""
+        for key, var in self.param_vars.items():
+            self.params[key] = var.get()
+    
+    def _update_file_label(self, file_path):
+        """Update the label showing the current parameter file name"""
+        self.current_param_file = file_path
+        if file_path:
+            filename = Path(file_path).stem
+            self.file_label.config(text=f"Parameter file: {filename}")
+        else:
+            self.file_label.config(text="No parameter file selected")
 
 def main():
     root = tk.Tk()
