@@ -35,7 +35,7 @@ class DartPlungerSimulatorGUI:
             'fric1': 0.4,           # Static friction force (N)
             'fric2': 0.2,           # Dynamic friction term (N)
             'xso': 0.0254,          # Spring compression before priming (m)
-            'L_0': 0.1016,          # Initial plunger length (m)
+            'L_0': 0.1016,          # Plunger draw length (m)
             'k': 523 * (11/5),      # Spring constant (N/m)
             'end_time': 0.02,       # Simulation end time (s)
             'n_points': 1500        # Number of evaluation points
@@ -52,6 +52,13 @@ class DartPlungerSimulatorGUI:
             'end_time': (lambda v: v * MS_PER_S, lambda v: v / MS_PER_S),
         }
         self.current_param_file = None
+        self.hover_lines = []
+        self.hover_annotations = {}
+        self._hover_threshold_pixels = 25
+        self._hover_threshold_pixels_sq = self._hover_threshold_pixels ** 2
+        self._hover_connection = None
+        self._draw_connection = None
+        self._hover_cache = {}
         
         self.setup_gui()
         self.run_simulation()  # Initial simulation
@@ -119,7 +126,7 @@ class DartPlungerSimulatorGUI:
             'fric1': ('Static Friction (N)', 0, 2),
             'fric2': ('Dynamic Friction (N)', 0, 1),
             'xso': ('Spring Precompression (mm)', 10, 50),
-            'L_0': ('Initial Plunger Length (mm)', 50, 200),
+            'L_0': ('Plunger Draw Length (mm)', 50, 200),
             'k': ('Spring Constant (N/m)', 100, 2000),
             'end_time': ('End Time (ms)', 5, 100),
             'n_points': ('Number of Points', 500, 3000)
@@ -202,6 +209,8 @@ class DartPlungerSimulatorGUI:
         
         self.canvas = FigureCanvasTkAgg(self.fig, canvas_frame)
         self.canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+        self._hover_connection = self.canvas.mpl_connect("motion_notify_event", self._on_plot_hover)
+        self._draw_connection = self.canvas.mpl_connect("draw_event", self._on_canvas_draw)
         
         # Add navigation toolbar (with error handling)
         toolbar_frame = tk.Frame(canvas_frame)
@@ -213,6 +222,137 @@ class DartPlungerSimulatorGUI:
             nav_toolbar.update()
         except Exception as e:
             print(f"Navigation toolbar not available: {e}")
+
+    def _on_plot_hover(self, event):
+        """Handle mouse motion events to show tooltips with exact values."""
+        if not self.hover_annotations or not self.hover_lines:
+            return
+
+        needs_redraw = self._hide_all_annotations(except_axis=event.inaxes)
+
+        ax = event.inaxes
+        if ax not in self.hover_annotations or event.xdata is None or event.ydata is None:
+            if needs_redraw:
+                self.canvas.draw_idle()
+            return
+
+        annotation = self.hover_annotations[ax]
+        closest_point = None
+        closest_distance_sq = np.inf
+        mouse_point = np.array([event.x, event.y])
+
+        for line in self.hover_lines:
+            if line.axes is not ax:
+                continue
+
+            cache = self._hover_cache.get(line)
+            if cache is None:
+                cache = self._build_line_cache(line)
+                if cache is not None:
+                    self._hover_cache[line] = cache
+
+            if cache is None:
+                continue
+
+            screen_points, xdata, ydata = cache
+            diff = screen_points - mouse_point
+            distances_sq = np.sum(diff * diff, axis=1)
+            if distances_sq.size == 0:
+                continue
+
+            idx = np.argmin(distances_sq)
+            distance_sq = distances_sq[idx]
+            if distance_sq < closest_distance_sq:
+                closest_distance_sq = distance_sq
+                closest_point = (xdata[idx], ydata[idx])
+
+        if closest_point is None or closest_distance_sq > self._hover_threshold_pixels_sq:
+            if annotation.get_visible():
+                annotation.set_visible(False)
+                needs_redraw = True
+            if needs_redraw:
+                self.canvas.draw_idle()
+            return
+
+        x_val, y_val = closest_point
+        annotation.xy = (x_val, y_val)
+        ax_bbox = ax.get_window_extent()
+        point_disp = ax.transData.transform((x_val, y_val))
+
+        offset_x = 15
+        offset_y = 15
+        horiz_align = 'left'
+        vert_align = 'bottom'
+
+        if point_disp[0] > ax_bbox.x0 + ax_bbox.width * 0.7:
+            offset_x = -15
+            horiz_align = 'right'
+
+        if point_disp[1] > ax_bbox.y0 + ax_bbox.height * 0.7:
+            offset_y = -15
+            vert_align = 'top'
+
+        annotation.xytext = (offset_x, offset_y)
+        annotation.set_ha(horiz_align)
+        annotation.set_va(vert_align)
+        annotation.set_text(
+            f"{ax.get_xlabel()}: {self._format_tooltip_value(x_val)}\n"
+            f"{ax.get_ylabel()}: {self._format_tooltip_value(y_val)}"
+        )
+        if not annotation.get_visible():
+            annotation.set_visible(True)
+        needs_redraw = True
+
+        if needs_redraw:
+            self.canvas.draw_idle()
+
+    def _on_canvas_draw(self, event):
+        """Recalculate cached display coordinates when the canvas redraws."""
+        self._hover_cache = {}
+        for line in self.hover_lines:
+            cache = self._build_line_cache(line)
+            if cache is not None:
+                self._hover_cache[line] = cache
+
+    def _build_line_cache(self, line):
+        """Build or refresh the cached screen-space data for a line."""
+        if line.axes is None:
+            return None
+        xdata = np.asarray(line.get_xdata(orig=False))
+        ydata = np.asarray(line.get_ydata(orig=False))
+        if xdata.size == 0 or ydata.size == 0:
+            return None
+        data_points = np.column_stack((xdata, ydata))
+        screen_points = line.get_transform().transform(data_points)
+        return screen_points, xdata, ydata
+
+    def _hide_all_annotations(self, except_axis=None):
+        """Hide all tooltip annotations except the one tied to except_axis."""
+        changed = False
+        for ax, annotation in self.hover_annotations.items():
+            if ax is except_axis:
+                continue
+            if annotation.get_visible():
+                annotation.set_visible(False)
+                changed = True
+        return changed
+
+    @staticmethod
+    def _format_tooltip_value(value):
+        """Format numeric values for display inside the tooltip."""
+        if not np.isfinite(value):
+            return "NaN"
+
+        abs_val = abs(value)
+        if abs_val >= 1e4 or (abs_val > 0 and abs_val < 1e-3):
+            return f"{value:.3e}"
+        if abs_val < 1:
+            return f"{value:.4f}"
+        if abs_val < 100:
+            return f"{value:.3f}"
+        if abs_val < 1000:
+            return f"{value:.2f}"
+        return f"{value:.1f}"
         
     def system(self, t, x):
         """Define the system of first-order ODEs"""
@@ -285,6 +425,9 @@ class DartPlungerSimulatorGUI:
             v_t_ml = v_t_array * ML_PER_M3
             
             # Clear and plot with large, readable formatting
+            self.hover_lines = []
+            self.hover_annotations = {}
+            self._hover_cache = {}
             for ax in self.axes:
                 ax.clear()
             
@@ -303,7 +446,8 @@ class DartPlungerSimulatorGUI:
             
             for i, (x_data, y_data, title, xlabel, ylabel, color, use_time_xlim) in enumerate(plot_configs):
                 ax = self.axes[i]
-                ax.plot(x_data, y_data, color=color, linewidth=3)
+                line, = ax.plot(x_data, y_data, color=color, linewidth=3)
+                self.hover_lines.append(line)
                 ax.set_xlabel(xlabel, fontsize=12)
                 ax.set_ylabel(ylabel, fontsize=12)
                 ax.grid(True, alpha=0.3)
@@ -335,6 +479,22 @@ class DartPlungerSimulatorGUI:
                 y_formatter.set_useOffset(False)
                 ax.yaxis.set_major_formatter(y_formatter)
                 ax.xaxis.set_major_locator(MaxNLocator(nbins=5))
+
+                annotation = ax.annotate(
+                    "",
+                    xy=(0, 0),
+                    xytext=(15, 15),
+                    textcoords="offset points",
+                    bbox=dict(boxstyle="round,pad=0.3", fc="white", alpha=1.0),
+                    arrowprops=dict(arrowstyle="->", color="black"),
+                    zorder=20
+                )
+                annotation.set_visible(False)
+                annotation.set_clip_on(False)
+                if annotation.arrow_patch is not None:
+                    annotation.arrow_patch.set_zorder(19)
+                    annotation.arrow_patch.set_clip_on(False)
+                self.hover_annotations[ax] = annotation
             
             self.canvas.draw()
             
