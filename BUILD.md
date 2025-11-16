@@ -39,14 +39,21 @@ powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | ie
 After building, you'll find the executables in the `dist/` directory:
 
 - **macOS/Linux:** `./dist/`
-  - `nomad-simulator`
-  - `spring-plunger-simulator`
+  - `nomad-simulator/` - Directory containing the app and its dependencies
+    - Run `./dist/nomad-simulator/nomad-simulator` to launch
+  - `spring-plunger-simulator/` - Directory containing the app and its dependencies
+    - Run `./dist/spring-plunger-simulator/spring-plunger-simulator` to launch
 
 - **Windows:** `.\dist\`
-  - `nomad-simulator.exe`
-  - `spring-plunger-simulator.exe`
+  - `nomad-simulator.exe` - Single executable file
+  - `spring-plunger-simulator.exe` - Single executable file
 
-Each executable is a single file that bundles Python and all dependencies. You can copy and run them on any compatible system without requiring Python or dependencies to be installed.
+### Why different formats?
+
+- **macOS** uses `--onedir` (directory bundles) for significantly faster startup times. The `--onefile` mode on macOS extracts files to a temporary directory on every launch, causing 10-15 second delays.
+- **Windows** uses `--onefile` (single executable) for convenience, as it doesn't suffer from the same performance issues.
+
+All builds bundle Python and all dependencies, so they can run on any compatible system without requiring Python installation.
 
 ## GitHub Actions
 
