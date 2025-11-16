@@ -1,3 +1,13 @@
+import os
+import sys
+
+# Fix for PyInstaller matplotlib font cache issue on macOS
+# https://github.com/matplotlib/matplotlib/issues/13071
+if getattr(sys, 'frozen', False):
+    # Running as PyInstaller bundle
+    if 'MPLCONFIGDIR' in os.environ:
+        del os.environ['MPLCONFIGDIR']
+
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
