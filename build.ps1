@@ -29,11 +29,11 @@ if (Test-Path dist) { Remove-Item -Recurse -Force dist }
 # Build executables
 Write-Host ""
 Write-Host "Building Nomad Simulator executable..."
-uv run pyinstaller --onefile --windowed --name nomad-simulator src/nomad_ui.py
+uv run pyinstaller --onefile --windowed --runtime-hook=hooks/runtime_hook_matplotlib.py --name nomad-simulator src/nomad_ui.py
 
 Write-Host ""
 Write-Host "Building Spring Plunger Simulator executable..."
-uv run pyinstaller --onefile --windowed --name spring-plunger-simulator src/dart_plunger_gui.py
+uv run pyinstaller --onefile --windowed --runtime-hook=hooks/runtime_hook_matplotlib.py --name spring-plunger-simulator src/dart_plunger_gui.py
 
 Write-Host ""
 Write-Host "Build complete!" -ForegroundColor Green
