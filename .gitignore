@@ -13,4 +13,9 @@ uv.lock
 # Virtual environments
 .venv
 
+# py-app-standalone build artifacts
+py-standalone/
+*.tar.gz
+*.zip
+
 .DS_Store

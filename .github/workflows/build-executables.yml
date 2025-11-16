@@ -1,0 +1,108 @@
+name: Build Executables
+
+on:
+  push:
+    branches:
+      - main
+      - claude/**
+    tags:
+      - 'v*'
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:  # Allow manual triggering
+
+jobs:
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Update uv
+        run: uv self update
+
+      - name: Build macOS executable
+        run: |
+          uvx py-app-standalone pneumatic-gun-simulators
+
+      - name: List build artifacts
+        run: |
+          ls -lah py-standalone/
+          find py-standalone -name "nomad-simulator" -o -name "spring-plunger-simulator"
+
+      - name: Create distribution archive
+        run: |
+          cd py-standalone
+          tar -czf ../pneumatic-gun-simulators-macos.tar.gz *
+          cd ..
+
+      - name: Upload macOS artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: pneumatic-gun-simulators-macos
+          path: pneumatic-gun-simulators-macos.tar.gz
+          retention-days: 30
+
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        run: |
+          powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+          echo "$env:USERPROFILE\.local\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+      - name: Update uv
+        run: uv self update
+        shell: pwsh
+
+      - name: Build Windows executable
+        run: |
+          uvx py-app-standalone pneumatic-gun-simulators
+        shell: pwsh
+
+      - name: List build artifacts
+        run: |
+          Get-ChildItem -Recurse py-standalone
+        shell: pwsh
+
+      - name: Create distribution archive
+        run: |
+          Compress-Archive -Path py-standalone\* -DestinationPath pneumatic-gun-simulators-windows.zip
+        shell: pwsh
+
+      - name: Upload Windows artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: pneumatic-gun-simulators-windows
+          path: pneumatic-gun-simulators-windows.zip
+          retention-days: 30
+
+  create-release:
+    needs: [build-macos, build-windows]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: write
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            pneumatic-gun-simulators-macos/pneumatic-gun-simulators-macos.tar.gz
+            pneumatic-gun-simulators-windows/pneumatic-gun-simulators-windows.zip
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

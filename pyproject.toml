@@ -9,6 +9,10 @@ dependencies = [
     "matplotlib==3.10.*",
 ]
 
+[project.scripts]
+nomad-simulator = "nomad_ui:main"
+spring-plunger-simulator = "dart_plunger_gui:main"
+
 [tool.uv]
 python-preference = "only-managed"
 add-bounds = "minor"
