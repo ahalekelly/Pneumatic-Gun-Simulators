@@ -3,10 +3,16 @@ name = "pneumatic-gun-simulators"
 version = "0.1.0"
 description = "Simulators for precompressed air and spring piston guns"
 readme = "README.md"
-requires-python = "==3.13.*"
+requires-python = ">=3.10"
 dependencies = [
-    "scipy==1.16.*",
-    "matplotlib==3.10.*",
+    "scipy>=1.10.0",
+    "matplotlib>=3.7.0",
+    "numpy>=1.24.0",
+]
+
+[project.optional-dependencies]
+build = [
+    "pyinstaller>=6.0.0",
 ]
 
 [project.scripts]
@@ -15,4 +21,3 @@ spring-plunger-simulator = "dart_plunger_gui:main"
 
 [tool.uv]
 python-preference = "only-managed"
-add-bounds = "minor"

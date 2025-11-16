@@ -1,6 +1,6 @@
 # Building Standalone Executables
 
-This project uses [py-app-standalone](https://github.com/jlevy/py-app-standalone) to create self-contained, relocatable executables for macOS and Windows.
+This project uses [PyInstaller](https://pyinstaller.org/) to create standalone executables for macOS and Windows.
 
 ## Prerequisites
 
@@ -36,17 +36,17 @@ powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | ie
 
 ## Build Output
 
-After building, you'll find the executables in:
+After building, you'll find the executables in the `dist/` directory:
 
-- **macOS/Linux:** `./py-standalone/cpython-*/bin/`
+- **macOS/Linux:** `./dist/`
   - `nomad-simulator`
   - `spring-plunger-simulator`
 
-- **Windows:** `.\py-standalone\cpython-*\Scripts\`
+- **Windows:** `.\dist\`
   - `nomad-simulator.exe`
   - `spring-plunger-simulator.exe`
 
-The entire `py-standalone` directory is relocatable and can be moved to any compatible system without requiring Python or any dependencies to be installed.
+Each executable is a single file that bundles Python and all dependencies. You can copy and run them on any compatible system without requiring Python or dependencies to be installed.
 
 ## GitHub Actions
 
@@ -70,34 +70,69 @@ You can also manually trigger the build workflow from the GitHub Actions tab in 
 
 ## What's Included
 
-The standalone distribution includes:
-- Python interpreter (version 3.13)
+Each executable includes:
+- Python interpreter
 - All dependencies (scipy, matplotlib, numpy, etc.)
-- Both GUI applications:
-  - **Nomad Simulator**: Precompressed air gun simulator
-  - **Spring Plunger Simulator**: Spring piston gun simulator
+- Application code
+
+Available applications:
+- **nomad-simulator**: Precompressed air gun simulator
+- **spring-plunger-simulator**: Spring piston gun simulator
 
 ## Troubleshooting
 
 ### uv not found
-Make sure `uv` is in your PATH. After installation, you may need to restart your terminal or add it to your PATH manually.
+Make sure `uv` is in your PATH. After installation, you may need to restart your terminal.
 
 ### Build fails
-1. Update uv to the latest version: `uv self update`
-2. Check that you have an internet connection (needed to download dependencies)
-3. On macOS, ensure you have Xcode command line tools installed: `xcode-select --install`
+1. Make sure you have an internet connection (needed to download dependencies)
+2. On macOS, ensure you have Xcode command line tools installed: `xcode-select --install`
+3. On Windows, you may need to allow the script execution: `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser`
 
 ### Executables don't run
-- Ensure you're running on a compatible system (same OS and architecture as the build)
-- On macOS, you may need to grant permission in System Preferences > Security & Privacy
-- The entire `py-standalone` directory must be kept together (don't try to move just the executable)
+- Ensure you're running on a compatible system (same OS as the build)
+- On macOS, you may need to grant permission in System Preferences > Security & Privacy:
+  - Right-click the app and select "Open" the first time you run it
+  - Or run: `xattr -cr dist/nomad-simulator` to remove quarantine attributes
+- On Windows, you may need to allow the app through Windows Defender
+
+### PyInstaller-specific issues
+
+If you encounter issues with the build:
+- Delete the `build/` and `dist/` directories and try again
+- Check the PyInstaller warnings during build - some missing modules may need to be explicitly included
 
 ## Advanced Usage
 
-You can also build manually using `uvx`:
+### Custom PyInstaller Options
 
+You can customize the build by editing the PyInstaller commands in `build.sh` or `build.ps1`:
+
+- `--onefile`: Creates a single executable file (current default)
+- `--windowed`: Prevents console window from appearing (current default)
+- `--icon=icon.ico`: Add a custom icon
+- `--add-data`: Include additional data files
+- `--hidden-import`: Explicitly import modules that PyInstaller misses
+
+Example:
 ```bash
-uvx py-app-standalone pneumatic-gun-simulators
+uv run pyinstaller --onefile --windowed --icon=icon.ico --name nomad-simulator src/nomad_ui.py
 ```
 
-This gives you more control over the build process and allows you to customize options.
+### Building without uv
+
+If you prefer not to use uv, you can build with regular Python:
+
+```bash
+pip install -e ".[build]"
+pyinstaller --onefile --windowed --name nomad-simulator src/nomad_ui.py
+pyinstaller --onefile --windowed --name spring-plunger-simulator src/dart_plunger_gui.py
+```
+
+## Size Optimization
+
+The executables are quite large (~100MB+) because they include the entire Python runtime and scientific libraries. This is normal for PyInstaller builds with matplotlib and scipy.
+
+To reduce size:
+- Consider using `--onedir` instead of `--onefile` (creates a folder instead of a single file)
+- Use UPX compression: `--upx-dir=/path/to/upx` (may cause antivirus false positives)

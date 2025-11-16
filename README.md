@@ -50,4 +50,4 @@ See [BUILD.md](BUILD.md) for detailed instructions on:
 .\build.ps1
 ```
 
-The executables will be in `py-standalone/cpython-*/bin/` (macOS/Linux) or `py-standalone\cpython-*\Scripts\` (Windows).
+The executables will be in the `dist/` directory.

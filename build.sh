@@ -1,5 +1,5 @@
 #!/bin/bash
-# Build script for macOS and Linux executable builds using py-app-standalone
+# Build script for macOS and Linux executable builds using PyInstaller
 
 set -e  # Exit on error
 
@@ -17,23 +17,28 @@ fi
 echo "Using uv version: $(uv --version)"
 echo ""
 
-# Update uv to ensure we have the latest version
-echo "Updating uv..."
-uv self update || echo "Warning: Could not update uv, continuing with current version"
-echo ""
+# Install dependencies including PyInstaller
+echo "Installing dependencies..."
+uv sync --all-extras
 
-# Build the standalone distribution
-echo "Building standalone Python environment with pneumatic-gun-simulators..."
-uvx py-app-standalone pneumatic-gun-simulators
+# Clean previous builds
+echo "Cleaning previous builds..."
+rm -rf build dist
+
+# Build executables
+echo ""
+echo "Building Nomad Simulator executable..."
+uv run pyinstaller --onefile --windowed --name nomad-simulator src/nomad_ui.py
+
+echo ""
+echo "Building Spring Plunger Simulator executable..."
+uv run pyinstaller --onefile --windowed --name spring-plunger-simulator src/dart_plunger_gui.py
 
 echo ""
 echo "Build complete!"
 echo ""
 echo "The standalone executables are located in:"
-echo "  ./py-standalone/cpython-*/bin/"
+echo "  ./dist/"
 echo ""
 echo "Available executables:"
-echo "  - nomad-simulator"
-echo "  - spring-plunger-simulator"
-echo ""
-echo "You can move the entire py-standalone directory to any compatible system."
+ls -lh dist/

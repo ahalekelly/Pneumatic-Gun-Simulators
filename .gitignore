@@ -13,8 +13,10 @@ uv.lock
 # Virtual environments
 .venv
 
-# py-app-standalone build artifacts
-py-standalone/
+# PyInstaller build artifacts
+build/
+dist/
+*.spec
 *.tar.gz
 *.zip
 

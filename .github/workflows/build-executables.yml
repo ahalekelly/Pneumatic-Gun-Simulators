@@ -24,21 +24,22 @@ jobs:
           curl -LsSf https://astral.sh/uv/install.sh | sh
           echo "$HOME/.local/bin" >> $GITHUB_PATH
 
-      - name: Update uv
-        run: uv self update
-
-      - name: Build macOS executable
+      - name: Install dependencies
         run: |
-          uvx py-app-standalone pneumatic-gun-simulators
+          uv sync --all-extras
+
+      - name: Build macOS executables
+        run: |
+          uv run pyinstaller --onefile --windowed --name nomad-simulator src/nomad_ui.py
+          uv run pyinstaller --onefile --windowed --name spring-plunger-simulator src/dart_plunger_gui.py
 
       - name: List build artifacts
         run: |
-          ls -lah py-standalone/
-          find py-standalone -name "nomad-simulator" -o -name "spring-plunger-simulator"
+          ls -lh dist/
 
       - name: Create distribution archive
         run: |
-          cd py-standalone
+          cd dist
           tar -czf ../pneumatic-gun-simulators-macos.tar.gz *
           cd ..
 
@@ -59,24 +60,27 @@ jobs:
         run: |
           powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
           echo "$env:USERPROFILE\.local\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-
-      - name: Update uv
-        run: uv self update
         shell: pwsh
 
-      - name: Build Windows executable
+      - name: Install dependencies
         run: |
-          uvx py-app-standalone pneumatic-gun-simulators
+          uv sync --all-extras
+        shell: pwsh
+
+      - name: Build Windows executables
+        run: |
+          uv run pyinstaller --onefile --windowed --name nomad-simulator src/nomad_ui.py
+          uv run pyinstaller --onefile --windowed --name spring-plunger-simulator src/dart_plunger_gui.py
         shell: pwsh
 
       - name: List build artifacts
         run: |
-          Get-ChildItem -Recurse py-standalone
+          Get-ChildItem dist\*.exe | Format-Table Name, Length -AutoSize
         shell: pwsh
 
       - name: Create distribution archive
         run: |
-          Compress-Archive -Path py-standalone\* -DestinationPath pneumatic-gun-simulators-windows.zip
+          Compress-Archive -Path dist\*.exe -DestinationPath pneumatic-gun-simulators-windows.zip
         shell: pwsh
 
       - name: Upload Windows artifacts
