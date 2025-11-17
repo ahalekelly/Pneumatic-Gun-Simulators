@@ -19,11 +19,19 @@ echo ""
 
 # Clean previous builds
 echo "Cleaning previous builds..."
-rm -rf py-standalone
+rm -rf py-standalone requirements.txt
 
-# Build the standalone distribution from local package
-echo "Building standalone Python environment from local package..."
-uvx py-app-standalone . --source-only
+# Create temporary requirements file with just dependencies
+echo "Creating requirements file..."
+cat > requirements.txt << 'EOF'
+scipy>=1.10.0
+matplotlib>=3.7.0
+numpy>=1.24.0
+EOF
+
+# Build the standalone distribution with dependencies only
+echo "Building standalone Python environment with dependencies..."
+uvx py-app-standalone requirements.txt --source-only
 
 # Find the Python installation directory
 PYTHON_DIR=$(find py-standalone -maxdepth 1 -name "cpython-*" -type d | head -1)
@@ -243,3 +251,6 @@ else
     echo "You can move the entire py-standalone directory to any compatible system."
 fi
 
+# Clean up temporary files
+echo "Cleaning up temporary files..."
+rm -f requirements.txt
