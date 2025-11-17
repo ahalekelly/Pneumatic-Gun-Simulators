@@ -50,6 +50,8 @@ See [BUILD.md](BUILD.md) for detailed instructions on:
 .\build.ps1
 ```
 
-The executables will be in the `dist/` directory:
-- **macOS**: `.app` bundles (drag to Applications folder)
-- **Windows**: `.exe` files
+The executables will be in the `py-standalone/` directory:
+- **macOS/Linux**: `py-standalone/cpython-*/bin/nomad-simulator` and `spring-plunger-simulator`
+- **Windows**: `py-standalone\cpython-*\Scripts\nomad-simulator.exe` and `spring-plunger-simulator.exe`
+
+The entire `py-standalone` directory is relocatable and can be moved anywhere.

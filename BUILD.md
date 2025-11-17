@@ -1,6 +1,6 @@
 # Building Standalone Executables
 
-This project uses [PyInstaller](https://pyinstaller.org/) to create standalone executables for macOS and Windows.
+This project uses [py-app-standalone](https://github.com/jlevy/py-app-standalone) to create standalone, relocatable Python environments with all dependencies bundled.
 
 ## Prerequisites
 
@@ -36,37 +36,36 @@ powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | ie
 
 ## Build Output
 
-After building, you'll find the executables in the `dist/` directory:
+After building, you'll find the executables in the `py-standalone/` directory:
 
-- **macOS:** `./dist/`
-  - `Nomad Simulator.app` - macOS application bundle
-  - `Spring Plunger Simulator.app` - macOS application bundle
-  - Double-click to launch, or drag to Applications folder
+- **macOS/Linux:** `./py-standalone/cpython-*/bin/`
+  - `nomad-simulator`
+  - `spring-plunger-simulator`
 
-- **Windows:** `.\dist\`
-  - `nomad-simulator.exe` - Single executable file
-  - `spring-plunger-simulator.exe` - Single executable file
+- **Windows:** `.\py-standalone\cpython-*\Scripts\`
+  - `nomad-simulator.exe`
+  - `spring-plunger-simulator.exe`
 
-### macOS .app Bundles
+### How py-app-standalone Works
 
-The macOS builds create proper `.app` bundles (application bundles). These are directories with a special structure that macOS recognizes as applications. Benefits:
+py-app-standalone creates a complete, relocatable Python installation with your package and all dependencies:
 
-- **Fast startup** - No extraction needed, files stay in place (instant launch like running the script directly)
-- **Native look and feel** - Appears in Applications, Dock, Spotlight, etc.
-- **Easy distribution** - Can be distributed as-is or in a .dmg file
-- **Self-contained** - Includes Python and all dependencies
+- **Self-contained** - Includes Python interpreter and all dependencies (scipy, matplotlib, numpy, etc.)
+- **Relocatable** - The entire `py-standalone` directory can be moved anywhere
+- **No extraction** - Files stay in place, no temporary extraction on launch
+- **Fast startup** - Instant launch like running the script directly
+- **Cross-platform** - Build on the same platform you want to run on
 
-The `.app` bundle structure:
+The directory structure:
 ```
-Nomad Simulator.app/
-  Contents/
-    MacOS/
-      Nomad Simulator (executable)
-    Frameworks/
-      (Python libraries, scipy, matplotlib, etc.)
-    Resources/
-      (application resources)
+py-standalone/
+  cpython-3.13.x-[platform]/
+    bin/ or Scripts/         (executables here)
+    lib/                     (Python standard library)
+    site-packages/           (your app + dependencies)
 ```
+
+The entire `py-standalone` directory is a complete Python installation that can be distributed as-is.
 
 ## GitHub Actions
 

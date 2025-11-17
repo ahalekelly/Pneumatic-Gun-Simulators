@@ -24,27 +24,22 @@ jobs:
           curl -LsSf https://astral.sh/uv/install.sh | sh
           echo "$HOME/.local/bin" >> $GITHUB_PATH
 
-      - name: Install dependencies
-        run: |
-          uv sync --all-extras
+      - name: Update uv
+        run: uv self update
 
       - name: Build macOS executables
         run: |
-          uv run pyinstaller --windowed --runtime-hook=hooks/runtime_hook_matplotlib.py \
-            --osx-bundle-identifier com.pneumaticgunsimulators.nomad \
-            --name "Nomad Simulator" src/nomad_ui.py
-          uv run pyinstaller --windowed --runtime-hook=hooks/runtime_hook_matplotlib.py \
-            --osx-bundle-identifier com.pneumaticgunsimulators.springplunger \
-            --name "Spring Plunger Simulator" src/dart_plunger_gui.py
+          uvx py-app-standalone .
 
       - name: List build artifacts
         run: |
-          ls -lh dist/
+          ls -lah py-standalone/
+          find py-standalone -name "nomad-simulator" -o -name "spring-plunger-simulator"
 
       - name: Create distribution archive
         run: |
-          cd dist
-          tar -czf ../pneumatic-gun-simulators-macos.tar.gz "Nomad Simulator.app" "Spring Plunger Simulator.app"
+          cd py-standalone
+          tar -czf ../pneumatic-gun-simulators-macos.tar.gz *
           cd ..
 
       - name: Upload macOS artifacts
@@ -66,25 +61,23 @@ jobs:
           echo "$env:USERPROFILE\.local\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
         shell: pwsh
 
-      - name: Install dependencies
-        run: |
-          uv sync --all-extras
+      - name: Update uv
+        run: uv self update
         shell: pwsh
 
       - name: Build Windows executables
         run: |
-          uv run pyinstaller --onefile --windowed --runtime-hook=hooks/runtime_hook_matplotlib.py --name nomad-simulator src/nomad_ui.py
-          uv run pyinstaller --onefile --windowed --runtime-hook=hooks/runtime_hook_matplotlib.py --name spring-plunger-simulator src/dart_plunger_gui.py
+          uvx py-app-standalone .
         shell: pwsh
 
       - name: List build artifacts
         run: |
-          Get-ChildItem dist\*.exe | Format-Table Name, Length -AutoSize
+          Get-ChildItem -Recurse py-standalone
         shell: pwsh
 
       - name: Create distribution archive
         run: |
-          Compress-Archive -Path dist\*.exe -DestinationPath pneumatic-gun-simulators-windows.zip
+          Compress-Archive -Path py-standalone\* -DestinationPath pneumatic-gun-simulators-windows.zip
         shell: pwsh
 
       - name: Upload Windows artifacts

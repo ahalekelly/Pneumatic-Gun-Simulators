@@ -1,5 +1,5 @@
 #!/bin/bash
-# Build script for macOS and Linux executable builds using PyInstaller
+# Build script for macOS and Linux executable builds using py-app-standalone
 
 set -e  # Exit on error
 
@@ -17,48 +17,27 @@ fi
 echo "Using uv version: $(uv --version)"
 echo ""
 
-# Install dependencies including PyInstaller
-echo "Installing dependencies..."
-uv sync --all-extras
+# Update uv to ensure we have the latest version
+echo "Updating uv..."
+uv self update || echo "Warning: Could not update uv, continuing with current version"
+echo ""
 
 # Clean previous builds
 echo "Cleaning previous builds..."
-rm -rf build dist
+rm -rf py-standalone
 
-# Build executables
-echo ""
-if [[ "$OSTYPE" == "darwin"* ]]; then
-    # macOS: Create .app bundles (no extraction needed, fast startup)
-    echo "Building Nomad Simulator.app..."
-    uv run pyinstaller --windowed --runtime-hook=hooks/runtime_hook_matplotlib.py \
-        --osx-bundle-identifier com.pneumaticgunsimulators.nomad \
-        --name "Nomad Simulator" src/nomad_ui.py
-
-    echo ""
-    echo "Building Spring Plunger Simulator.app..."
-    uv run pyinstaller --windowed --runtime-hook=hooks/runtime_hook_matplotlib.py \
-        --osx-bundle-identifier com.pneumaticgunsimulators.springplunger \
-        --name "Spring Plunger Simulator" src/dart_plunger_gui.py
-else
-    # Linux: Create single executables
-    echo "Building Nomad Simulator executable..."
-    uv run pyinstaller --onefile --windowed --runtime-hook=hooks/runtime_hook_matplotlib.py --name nomad-simulator src/nomad_ui.py
-
-    echo ""
-    echo "Building Spring Plunger Simulator executable..."
-    uv run pyinstaller --onefile --windowed --runtime-hook=hooks/runtime_hook_matplotlib.py --name spring-plunger-simulator src/dart_plunger_gui.py
-fi
+# Build the standalone distribution from local package
+echo "Building standalone Python environment from local package..."
+uvx py-app-standalone .
 
 echo ""
 echo "Build complete!"
 echo ""
 echo "The standalone executables are located in:"
-echo "  ./dist/"
+echo "  ./py-standalone/cpython-*/bin/"
 echo ""
-if [[ "$OSTYPE" == "darwin"* ]]; then
-    echo "macOS .app bundles:"
-    ls -d dist/*.app 2>/dev/null || echo "No .app bundles found"
-else
-    echo "Available executables:"
-    ls -lh dist/
-fi
+echo "Available executables:"
+find py-standalone -name "nomad-simulator" -o -name "spring-plunger-simulator"
+echo ""
+echo "You can move the entire py-standalone directory to any compatible system."
+
