@@ -1,4 +1,4 @@
-# Build script for Windows executable builds using py-app-standalone
+# Build script for Windows executable builds using PyInstaller
 
 $ErrorActionPreference = "Stop"
 
@@ -17,22 +17,30 @@ $uvVersion = uv --version
 Write-Host "Using uv version: $uvVersion"
 Write-Host ""
 
+# Install dependencies including PyInstaller
+Write-Host "Installing dependencies..."
+uv sync --all-extras
+
 # Clean previous builds
 Write-Host "Cleaning previous builds..."
-if (Test-Path py-standalone) { Remove-Item -Recurse -Force py-standalone }
+if (Test-Path build) { Remove-Item -Recurse -Force build }
+if (Test-Path dist) { Remove-Item -Recurse -Force dist }
 
-# Build the standalone distribution from local package (source-only to avoid .pyc path issues)
-Write-Host "Building standalone Python environment from local package..."
-uvx py-app-standalone . --source-only
+# Build executables
+Write-Host ""
+Write-Host "Building Nomad Simulator executable..."
+uv run pyinstaller --onefile --windowed --name nomad-simulator src/nomad_ui.py
+
+Write-Host ""
+Write-Host "Building Spring Plunger Simulator executable..."
+uv run pyinstaller --onefile --windowed --name spring-plunger-simulator src/dart_plunger_gui.py
 
 Write-Host ""
 Write-Host "Build complete!" -ForegroundColor Green
 Write-Host ""
 Write-Host "The standalone executables are located in:"
-Write-Host "  .\py-standalone\cpython-*\Scripts\"
+Write-Host "  .\dist\"
 Write-Host ""
 Write-Host "Available executables:"
-Get-ChildItem -Recurse py-standalone -Include nomad-simulator.exe,spring-plunger-simulator.exe | Select-Object FullName
-Write-Host ""
-Write-Host "You can move the entire py-standalone directory to any compatible Windows system."
+Get-ChildItem dist\*.exe | Format-Table Name, Length -AutoSize
 

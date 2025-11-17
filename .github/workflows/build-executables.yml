@@ -58,19 +58,25 @@ jobs:
           echo "$env:USERPROFILE\.local\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
         shell: pwsh
 
+      - name: Install dependencies
+        run: |
+          uv sync --all-extras
+        shell: pwsh
+
       - name: Build Windows executables
         run: |
-          uvx py-app-standalone . --source-only
+          uv run pyinstaller --onefile --windowed --name nomad-simulator src/nomad_ui.py
+          uv run pyinstaller --onefile --windowed --name spring-plunger-simulator src/dart_plunger_gui.py
         shell: pwsh
 
       - name: List build artifacts
         run: |
-          Get-ChildItem -Recurse py-standalone
+          Get-ChildItem dist\*.exe | Format-Table Name, Length -AutoSize
         shell: pwsh
 
       - name: Create distribution archive
         run: |
-          Compress-Archive -Path py-standalone\* -DestinationPath pneumatic-gun-simulators-windows.zip
+          Compress-Archive -Path dist\*.exe -DestinationPath pneumatic-gun-simulators-windows.zip
         shell: pwsh
 
       - name: Upload Windows artifacts
