@@ -26,17 +26,17 @@ jobs:
 
       - name: Build macOS executables
         run: |
-          uvx py-app-standalone . --source-only
+          ./build.sh
 
       - name: List build artifacts
         run: |
-          ls -lah py-standalone/
-          find py-standalone -name "nomad-simulator" -o -name "spring-plunger-simulator"
+          ls -lah dist/
+          ls -lah dist/*.app/
 
       - name: Create distribution archive
         run: |
-          cd py-standalone
-          tar -czf ../pneumatic-gun-simulators-macos.tar.gz *
+          cd dist
+          tar -czf ../pneumatic-gun-simulators-macos.tar.gz *.app
           cd ..
 
       - name: Upload macOS artifacts

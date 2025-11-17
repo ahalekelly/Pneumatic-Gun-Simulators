@@ -17,6 +17,7 @@ uv.lock
 py-standalone/
 build/
 dist/
+*.app
 *.spec
 *.tar.gz
 *.zip
