@@ -16,5 +16,8 @@ build = [
     "pillow>=10.0.0",
 ]
 
+[tool.setuptools]
+packages = []
+
 [tool.uv]
 python-preference = "only-managed"
