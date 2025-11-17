@@ -43,9 +43,13 @@ fi
 
 # Copy the Python UI files into the py-standalone structure
 echo "Copying application files..."
-mkdir -p "$PYTHON_DIR/app"
-cp -R "Precompressed Air" "$PYTHON_DIR/app/"
-cp -R "Spring Piston" "$PYTHON_DIR/app/"
+mkdir -p "$PYTHON_DIR/app/Precompressed Air"
+mkdir -p "$PYTHON_DIR/app/Spring Piston/setups"
+
+# Copy only Python files, not executables or icons
+cp "Precompressed Air/"*.py "$PYTHON_DIR/app/Precompressed Air/"
+cp "Spring Piston/"*.py "$PYTHON_DIR/app/Spring Piston/"
+cp "Spring Piston/setups/"*.pkl "$PYTHON_DIR/app/Spring Piston/setups/" 2>/dev/null || true
 
 # Create launcher scripts in the bin directory using relative paths
 echo "Creating launcher scripts..."
