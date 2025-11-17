@@ -33,18 +33,25 @@ jobs:
           ls -lah dist/
           ls -lah dist/*.app/
 
+      - name: Create distribution archives
+        run: |
+          cd dist
+          zip -r ../spring-plunger-simulator-macos.zip "Spring Plunger Simulator.app"
+          zip -r ../nomad-simulator-macos.zip "Nomad Simulator.app"
+          cd ..
+
       - name: Upload Spring Plunger Simulator macOS artifact
         uses: actions/upload-artifact@v4
         with:
           name: spring-plunger-simulator-macos
-          path: dist/Spring Plunger Simulator.app
+          path: spring-plunger-simulator-macos.zip
           retention-days: 30
 
       - name: Upload Nomad Simulator macOS artifact
         uses: actions/upload-artifact@v4
         with:
           name: nomad-simulator-macos
-          path: dist/Nomad Simulator.app
+          path: nomad-simulator-macos.zip
           retention-days: 30
 
   build-windows:
@@ -80,18 +87,24 @@ jobs:
           Get-ChildItem dist\*.exe | Format-Table Name, Length -AutoSize
         shell: pwsh
 
+      - name: Create distribution archives
+        run: |
+          Compress-Archive -Path dist\spring-plunger-simulator.exe -DestinationPath spring-plunger-simulator-windows.zip
+          Compress-Archive -Path dist\nomad-simulator.exe -DestinationPath nomad-simulator-windows.zip
+        shell: pwsh
+
       - name: Upload Spring Plunger Simulator Windows artifact
         uses: actions/upload-artifact@v4
         with:
           name: spring-plunger-simulator-windows
-          path: dist/spring-plunger-simulator.exe
+          path: spring-plunger-simulator-windows.zip
           retention-days: 30
 
       - name: Upload Nomad Simulator Windows artifact
         uses: actions/upload-artifact@v4
         with:
           name: nomad-simulator-windows
-          path: dist/nomad-simulator.exe
+          path: nomad-simulator-windows.zip
           retention-days: 30
 
   create-release:
@@ -104,17 +117,12 @@ jobs:
       - name: Download all artifacts
         uses: actions/download-artifact@v4
 
-      - name: Create distribution archives
+      - name: Prepare release files
         run: |
-          cd spring-plunger-simulator-macos
-          zip -r ../spring-plunger-simulator-macos.zip "Spring Plunger Simulator.app"
-          cd ../nomad-simulator-macos
-          zip -r ../nomad-simulator-macos.zip "Nomad Simulator.app"
-          cd ../spring-plunger-simulator-windows
-          zip ../spring-plunger-simulator-windows.zip spring-plunger-simulator.exe
-          cd ../nomad-simulator-windows
-          zip ../nomad-simulator-windows.zip nomad-simulator.exe
-          cd ..
+          mv spring-plunger-simulator-macos/spring-plunger-simulator-macos.zip .
+          mv nomad-simulator-macos/nomad-simulator-macos.zip .
+          mv spring-plunger-simulator-windows/spring-plunger-simulator-windows.zip .
+          mv nomad-simulator-windows/nomad-simulator-windows.zip .
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
