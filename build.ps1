@@ -17,22 +17,13 @@ $uvVersion = uv --version
 Write-Host "Using uv version: $uvVersion"
 Write-Host ""
 
-# Update uv to ensure we have the latest version
-Write-Host "Updating uv..."
-try {
-    uv self update
-} catch {
-    Write-Host "Warning: Could not update uv, continuing with current version" -ForegroundColor Yellow
-}
-Write-Host ""
-
 # Clean previous builds
 Write-Host "Cleaning previous builds..."
 if (Test-Path py-standalone) { Remove-Item -Recurse -Force py-standalone }
 
-# Build the standalone distribution from local package
+# Build the standalone distribution from local package (source-only to avoid .pyc path issues)
 Write-Host "Building standalone Python environment from local package..."
-uvx py-app-standalone .
+uvx py-app-standalone . --source-only
 
 Write-Host ""
 Write-Host "Build complete!" -ForegroundColor Green

@@ -24,9 +24,6 @@ jobs:
           curl -LsSf https://astral.sh/uv/install.sh | sh
           echo "$HOME/.local/bin" >> $GITHUB_PATH
 
-      - name: Update uv
-        run: uv self update
-
       - name: Build macOS executables
         run: |
           uvx py-app-standalone .
@@ -61,13 +58,9 @@ jobs:
           echo "$env:USERPROFILE\.local\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
         shell: pwsh
 
-      - name: Update uv
-        run: uv self update
-        shell: pwsh
-
       - name: Build Windows executables
         run: |
-          uvx py-app-standalone .
+          uvx py-app-standalone . --source-only
         shell: pwsh
 
       - name: List build artifacts

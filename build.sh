@@ -17,11 +17,6 @@ fi
 echo "Using uv version: $(uv --version)"
 echo ""
 
-# Update uv to ensure we have the latest version
-echo "Updating uv..."
-uv self update || echo "Warning: Could not update uv, continuing with current version"
-echo ""
-
 # Clean previous builds
 echo "Cleaning previous builds..."
 rm -rf py-standalone
