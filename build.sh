@@ -93,16 +93,45 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
             png_to_icns "$ICON_PNG" "dist/$APP_NAME.app/Contents/Resources/$ICON_FILE"
         fi
 
-        # Create launcher script
+        # Create launcher script with debug logging
         cat > "dist/$APP_NAME.app/Contents/MacOS/$APP_NAME" << 'EOF'
 #!/bin/bash
 # Get the directory where this script is located
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-# Run the actual Python executable
-exec "$DIR/../Resources/py-standalone/cpython-"*"/bin/EXEC_NAME" "$@"
+
+# Log file in user's home directory
+LOG_FILE="$HOME/Desktop/APPNAME.log"
+
+# Log function
+log() {
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*" >> "$LOG_FILE"
+}
+
+log "========== Starting APPNAME =========="
+log "DIR: $DIR"
+log "Looking for executable: $DIR/../Resources/py-standalone/cpython-*/bin/EXEC_NAME"
+
+# Find the executable
+EXEC_PATH="$DIR/../Resources/py-standalone/cpython-"*"/bin/EXEC_NAME"
+log "Expanded path: $EXEC_PATH"
+
+if [ ! -f $EXEC_PATH ]; then
+    log "ERROR: Executable not found at $EXEC_PATH"
+    log "Contents of bin directory:"
+    ls -la "$DIR/../Resources/py-standalone/cpython-"*"/bin/" >> "$LOG_FILE" 2>&1
+    exit 1
+fi
+
+log "Executing: $EXEC_PATH $@"
+# Run the actual Python executable, redirect output to log
+"$EXEC_PATH" "$@" >> "$LOG_FILE" 2>&1
+EXIT_CODE=$?
+log "Exit code: $EXIT_CODE"
+exit $EXIT_CODE
 EOF
-        # Replace EXEC_NAME with actual executable name
+        # Replace placeholders
         sed -i '' "s/EXEC_NAME/$EXECUTABLE_NAME/g" "dist/$APP_NAME.app/Contents/MacOS/$APP_NAME"
+        sed -i '' "s/APPNAME/$APP_NAME/g" "dist/$APP_NAME.app/Contents/MacOS/$APP_NAME"
         chmod +x "dist/$APP_NAME.app/Contents/MacOS/$APP_NAME"
 
         # Create Info.plist
