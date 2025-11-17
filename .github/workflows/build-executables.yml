@@ -30,8 +30,12 @@ jobs:
 
       - name: Build macOS executables
         run: |
-          uv run pyinstaller --onefile --windowed --runtime-hook=hooks/runtime_hook_matplotlib.py --name nomad-simulator src/nomad_ui.py
-          uv run pyinstaller --onefile --windowed --runtime-hook=hooks/runtime_hook_matplotlib.py --name spring-plunger-simulator src/dart_plunger_gui.py
+          uv run pyinstaller --windowed --runtime-hook=hooks/runtime_hook_matplotlib.py \
+            --osx-bundle-identifier com.pneumaticgunsimulators.nomad \
+            --name "Nomad Simulator" src/nomad_ui.py
+          uv run pyinstaller --windowed --runtime-hook=hooks/runtime_hook_matplotlib.py \
+            --osx-bundle-identifier com.pneumaticgunsimulators.springplunger \
+            --name "Spring Plunger Simulator" src/dart_plunger_gui.py
 
       - name: List build artifacts
         run: |
@@ -40,7 +44,7 @@ jobs:
       - name: Create distribution archive
         run: |
           cd dist
-          tar -czf ../pneumatic-gun-simulators-macos.tar.gz *
+          tar -czf ../pneumatic-gun-simulators-macos.tar.gz "Nomad Simulator.app" "Spring Plunger Simulator.app"
           cd ..
 
       - name: Upload macOS artifacts

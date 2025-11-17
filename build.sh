@@ -27,12 +27,27 @@ rm -rf build dist
 
 # Build executables
 echo ""
-echo "Building Nomad Simulator executable..."
-uv run pyinstaller --onefile --windowed --runtime-hook=hooks/runtime_hook_matplotlib.py --name nomad-simulator src/nomad_ui.py
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    # macOS: Create .app bundles (no extraction needed, fast startup)
+    echo "Building Nomad Simulator.app..."
+    uv run pyinstaller --windowed --runtime-hook=hooks/runtime_hook_matplotlib.py \
+        --osx-bundle-identifier com.pneumaticgunsimulators.nomad \
+        --name "Nomad Simulator" src/nomad_ui.py
 
-echo ""
-echo "Building Spring Plunger Simulator executable..."
-uv run pyinstaller --onefile --windowed --runtime-hook=hooks/runtime_hook_matplotlib.py --name spring-plunger-simulator src/dart_plunger_gui.py
+    echo ""
+    echo "Building Spring Plunger Simulator.app..."
+    uv run pyinstaller --windowed --runtime-hook=hooks/runtime_hook_matplotlib.py \
+        --osx-bundle-identifier com.pneumaticgunsimulators.springplunger \
+        --name "Spring Plunger Simulator" src/dart_plunger_gui.py
+else
+    # Linux: Create single executables
+    echo "Building Nomad Simulator executable..."
+    uv run pyinstaller --onefile --windowed --runtime-hook=hooks/runtime_hook_matplotlib.py --name nomad-simulator src/nomad_ui.py
+
+    echo ""
+    echo "Building Spring Plunger Simulator executable..."
+    uv run pyinstaller --onefile --windowed --runtime-hook=hooks/runtime_hook_matplotlib.py --name spring-plunger-simulator src/dart_plunger_gui.py
+fi
 
 echo ""
 echo "Build complete!"
@@ -40,5 +55,10 @@ echo ""
 echo "The standalone executables are located in:"
 echo "  ./dist/"
 echo ""
-echo "Available executables:"
-ls -lh dist/
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    echo "macOS .app bundles:"
+    ls -d dist/*.app 2>/dev/null || echo "No .app bundles found"
+else
+    echo "Available executables:"
+    ls -lh dist/
+fi

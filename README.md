@@ -50,4 +50,6 @@ See [BUILD.md](BUILD.md) for detailed instructions on:
 .\build.ps1
 ```
 
-The executables will be in the `dist/` directory.
+The executables will be in the `dist/` directory:
+- **macOS**: `.app` bundles (drag to Applications folder)
+- **Windows**: `.exe` files

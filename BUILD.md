@@ -39,16 +39,34 @@ powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | ie
 After building, you'll find the executables in the `dist/` directory:
 
 - **macOS:** `./dist/`
-  - `nomad-simulator` - Single executable file
-  - `spring-plunger-simulator` - Single executable file
+  - `Nomad Simulator.app` - macOS application bundle
+  - `Spring Plunger Simulator.app` - macOS application bundle
+  - Double-click to launch, or drag to Applications folder
 
 - **Windows:** `.\dist\`
   - `nomad-simulator.exe` - Single executable file
   - `spring-plunger-simulator.exe` - Single executable file
 
-Each executable is a single file that bundles Python and all dependencies. You can copy and run them on any compatible system without requiring Python or dependencies to be installed.
+### macOS .app Bundles
 
-**Note on macOS startup time**: The first launch may take 10-15 seconds as the executable extracts to a temporary directory and matplotlib builds its font cache. Subsequent launches should be faster as the cache is reused.
+The macOS builds create proper `.app` bundles (application bundles). These are directories with a special structure that macOS recognizes as applications. Benefits:
+
+- **Fast startup** - No extraction needed, files stay in place (instant launch like running the script directly)
+- **Native look and feel** - Appears in Applications, Dock, Spotlight, etc.
+- **Easy distribution** - Can be distributed as-is or in a .dmg file
+- **Self-contained** - Includes Python and all dependencies
+
+The `.app` bundle structure:
+```
+Nomad Simulator.app/
+  Contents/
+    MacOS/
+      Nomad Simulator (executable)
+    Frameworks/
+      (Python libraries, scipy, matplotlib, etc.)
+    Resources/
+      (application resources)
+```
 
 ## GitHub Actions
 
