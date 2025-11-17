@@ -1,8 +1,8 @@
 """
 PyInstaller runtime hook for matplotlib to fix font cache performance on macOS.
 
-This sets MPLCONFIGDIR to a persistent location in the user's home directory
-so the font cache is preserved between runs instead of being rebuilt every time.
+This sets MPLCONFIGDIR to a persistent location and configures matplotlib
+to skip the expensive font discovery process on every launch.
 
 Reference: https://github.com/matplotlib/matplotlib/issues/13071
 """
@@ -31,3 +31,13 @@ if getattr(sys, 'frozen', False):
 
     # Set the matplotlib config directory
     os.environ['MPLCONFIGDIR'] = str(config_dir)
+
+    # Disable font manager's font discovery to speed up startup
+    # This makes matplotlib use only built-in fonts
+    os.environ['MPLBACKEND'] = 'TkAgg'
+
+    # Set matplotlib to use a minimal font set
+    import matplotlib
+    matplotlib.rcParams['font.family'] = 'sans-serif'
+    matplotlib.rcParams['font.sans-serif'] = ['DejaVu Sans']
+
