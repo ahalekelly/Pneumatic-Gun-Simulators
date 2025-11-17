@@ -57,9 +57,11 @@ Once the workflow completes:
 
 1. Go to the "Releases" section of your GitHub repository
 2. You should see a new release for your version tag
-3. The release will contain two downloadable files:
-   - `pneumatic-gun-simulators-macos.tar.gz` - Contains both .app bundles
-   - `pneumatic-gun-simulators-windows.zip` - Contains both .exe files
+3. The release will contain four downloadable files:
+   - `spring-plunger-simulator-macos.tar.gz` - macOS .app bundle
+   - `nomad-simulator-macos.tar.gz` - macOS .app bundle
+   - `spring-plunger-simulator-windows.zip` - Windows .exe file
+   - `nomad-simulator-windows.zip` - Windows .exe file
 
 ### 6. Test the Executables (Recommended)
 
@@ -67,8 +69,9 @@ Download the artifacts and test them:
 
 **macOS:**
 ```bash
-# Download and extract
-tar -xzf pneumatic-gun-simulators-macos.tar.gz
+# Download and extract each simulator
+tar -xzf spring-plunger-simulator-macos.tar.gz
+tar -xzf nomad-simulator-macos.tar.gz
 
 # Run the applications
 open "Spring Plunger Simulator.app"
@@ -88,12 +91,13 @@ xattr -cr "Nomad Simulator.app"
 
 **Windows:**
 ```powershell
-# Extract the zip file
-Expand-Archive pneumatic-gun-simulators-windows.zip
+# Extract each zip file
+Expand-Archive spring-plunger-simulator-windows.zip
+Expand-Archive nomad-simulator-windows.zip
 
 # Run the executables
-.\nomad-simulator.exe
 .\spring-plunger-simulator.exe
+.\nomad-simulator.exe
 ```
 
 ### 7. Add Release Notes (Optional)

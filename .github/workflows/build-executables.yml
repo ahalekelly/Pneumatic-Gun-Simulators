@@ -33,17 +33,25 @@ jobs:
           ls -lah dist/
           ls -lah dist/*.app/
 
-      - name: Create distribution archive
+      - name: Create distribution archives
         run: |
           cd dist
-          tar -czf ../pneumatic-gun-simulators-macos.tar.gz *.app
+          tar -czf ../spring-plunger-simulator-macos.tar.gz "Spring Plunger Simulator.app"
+          tar -czf ../nomad-simulator-macos.tar.gz "Nomad Simulator.app"
           cd ..
 
-      - name: Upload macOS artifacts
+      - name: Upload Spring Plunger Simulator macOS artifact
         uses: actions/upload-artifact@v4
         with:
-          name: pneumatic-gun-simulators-macos
-          path: pneumatic-gun-simulators-macos.tar.gz
+          name: spring-plunger-simulator-macos
+          path: spring-plunger-simulator-macos.tar.gz
+          retention-days: 30
+
+      - name: Upload Nomad Simulator macOS artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: nomad-simulator-macos
+          path: nomad-simulator-macos.tar.gz
           retention-days: 30
 
   build-windows:
@@ -74,16 +82,24 @@ jobs:
           Get-ChildItem dist\*.exe | Format-Table Name, Length -AutoSize
         shell: pwsh
 
-      - name: Create distribution archive
+      - name: Create distribution archives
         run: |
-          Compress-Archive -Path dist\*.exe -DestinationPath pneumatic-gun-simulators-windows.zip
+          Compress-Archive -Path dist\spring-plunger-simulator.exe -DestinationPath spring-plunger-simulator-windows.zip
+          Compress-Archive -Path dist\nomad-simulator.exe -DestinationPath nomad-simulator-windows.zip
         shell: pwsh
 
-      - name: Upload Windows artifacts
+      - name: Upload Spring Plunger Simulator Windows artifact
         uses: actions/upload-artifact@v4
         with:
-          name: pneumatic-gun-simulators-windows
-          path: pneumatic-gun-simulators-windows.zip
+          name: spring-plunger-simulator-windows
+          path: spring-plunger-simulator-windows.zip
+          retention-days: 30
+
+      - name: Upload Nomad Simulator Windows artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: nomad-simulator-windows
+          path: nomad-simulator-windows.zip
           retention-days: 30
 
   create-release:
@@ -100,8 +116,10 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            pneumatic-gun-simulators-macos/pneumatic-gun-simulators-macos.tar.gz
-            pneumatic-gun-simulators-windows/pneumatic-gun-simulators-windows.zip
+            spring-plunger-simulator-macos/spring-plunger-simulator-macos.tar.gz
+            nomad-simulator-macos/nomad-simulator-macos.tar.gz
+            spring-plunger-simulator-windows/spring-plunger-simulator-windows.zip
+            nomad-simulator-windows/nomad-simulator-windows.zip
           draft: false
           prerelease: false
         env:
