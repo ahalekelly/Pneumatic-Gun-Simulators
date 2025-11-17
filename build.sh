@@ -19,27 +19,17 @@ echo ""
 
 # Clean previous builds
 echo "Cleaning previous builds..."
-rm -rf py-standalone requirements.txt
+rm -rf py-standalone
 
-# Create temporary requirements file with just dependencies
-echo "Creating requirements file..."
-cat > requirements.txt << 'EOF'
-scipy>=1.10.0
-matplotlib>=3.7.0
-numpy>=1.24.0
-EOF
+# Create standalone Python environment
+echo "Creating standalone Python environment..."
+uv python install --managed-python --install-dir py-standalone 3.13
+mv py-standalone/cpython-* py-standalone/python-install
+PYTHON_DIR="py-standalone/python-install"
 
-# Build the standalone distribution with dependencies only
-echo "Building standalone Python environment with dependencies..."
-uvx py-app-standalone requirements.txt --source-only
-
-# Find the Python installation directory
-PYTHON_DIR=$(find py-standalone -maxdepth 1 -name "cpython-*" -type d | head -1)
-
-if [ -z "$PYTHON_DIR" ]; then
-    echo "Error: Could not find Python installation directory"
-    exit 1
-fi
+# Install dependencies
+echo "Installing dependencies..."
+uv pip install --python "$PYTHON_DIR" scipy>=1.10.0 matplotlib>=3.7.0 numpy>=1.24.0
 
 # Copy the Python UI files into the py-standalone structure
 echo "Copying application files..."
@@ -151,11 +141,10 @@ log() {
 log "========== Starting APPNAME =========="
 log "DIR: $DIR"
 
-# Find the Python directory (expand the glob)
-PYTHON_DIR=$(echo "$DIR/../Resources/py-standalone/cpython-"*)
+# Set the Python directory and executable path
+PYTHON_DIR="$DIR/../Resources/py-standalone/python-install"
 log "Python directory: $PYTHON_DIR"
 
-# Set the executable path
 EXEC_PATH="$PYTHON_DIR/bin/EXEC_NAME"
 log "Executable path: $EXEC_PATH"
 
@@ -247,14 +236,10 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
     echo "  open 'dist/Nomad Simulator.app'"
 else
     echo "The standalone executables are located in:"
-    echo "  ./py-standalone/cpython-*/bin/"
+    echo "  ./py-standalone/python-install/bin/"
     echo ""
     echo "Available executables:"
     find py-standalone -name "nomad-simulator" -o -name "spring-piston-simulator"
     echo ""
     echo "You can move the entire py-standalone directory to any compatible system."
 fi
-
-# Clean up temporary files
-echo "Cleaning up temporary files..."
-rm -f requirements.txt

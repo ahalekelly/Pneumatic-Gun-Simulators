@@ -21,7 +21,6 @@ dist/
 *.spec
 *.tar.gz
 *.zip
-requirements.txt
 
 # Generated icon files
 *.ico
