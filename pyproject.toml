@@ -17,7 +17,7 @@ build = [
 
 [project.scripts]
 nomad-simulator = "nomad_ui:main"
-spring-plunger-simulator = "dart_plunger_gui:main"
+spring-piston-simulator = "dart_plunger_gui:main"
 
 [tool.uv]
 python-preference = "only-managed"

@@ -23,6 +23,6 @@ def png_to_ico(png_path, ico_path, sizes=None):
 
 if __name__ == "__main__":
     # Convert both icons
-    png_to_ico("icons/spring-plunger-icon.png", "icons/spring-plunger-icon.ico")
+    png_to_ico("icons/spring-piston-icon.png", "icons/spring-piston-icon.ico")
     png_to_ico("icons/nomad-icon.png", "icons/nomad-icon.ico")
     print("Icon conversion complete!")

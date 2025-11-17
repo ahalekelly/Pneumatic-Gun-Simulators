@@ -54,8 +54,8 @@ uv run pyinstaller --onefile --windowed --name nomad-simulator --icon icons/noma
     src/nomad_ui.py
 
 Write-Host ""
-Write-Host "Building Spring Plunger Simulator executable..."
-uv run pyinstaller --onefile --windowed --name spring-plunger-simulator --icon icons/spring-plunger-icon.ico `
+Write-Host "Building Spring Piston Simulator executable..."
+uv run pyinstaller --onefile --windowed --name spring-piston-simulator --icon icons/spring-piston-icon.ico `
     --exclude-module scipy.stats `
     --exclude-module scipy.sparse `
     --exclude-module scipy.spatial `

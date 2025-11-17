@@ -145,7 +145,7 @@ EOF
     mkdir -p dist
 
     # Create both .app bundles with icons
-    create_app_bundle "Spring Plunger Simulator" "spring-plunger-simulator" "com.pneumaticgunsimulators.springplunger" "icons/spring-plunger-icon.png"
+    create_app_bundle "Spring Piston Simulator" "spring-piston-simulator" "com.pneumaticgunsimulators.springpiston" "icons/spring-piston-icon.png"
     create_app_bundle "Nomad Simulator" "nomad-simulator" "com.pneumaticgunsimulators.nomad" "icons/nomad-icon.png"
 
     echo ""
@@ -164,14 +164,14 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
     ls -d dist/*.app
     echo ""
     echo "Double-click the .app files to launch, or run:"
-    echo "  open 'dist/Spring Plunger Simulator.app'"
+    echo "  open 'dist/Spring Piston Simulator.app'"
     echo "  open 'dist/Nomad Simulator.app'"
 else
     echo "The standalone executables are located in:"
     echo "  ./py-standalone/cpython-*/bin/"
     echo ""
     echo "Available executables:"
-    find py-standalone -name "nomad-simulator" -o -name "spring-plunger-simulator"
+    find py-standalone -name "nomad-simulator" -o -name "spring-piston-simulator"
     echo ""
     echo "You can move the entire py-standalone directory to any compatible system."
 fi

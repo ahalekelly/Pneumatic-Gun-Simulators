@@ -6,7 +6,7 @@ Equations will be posted later, but they are all 1-D lumped parameter simulation
 ## Applications
 
 - **Nomad Simulator** (`nomad_ui.py`): Precompressed air gun simulator
-- **Spring Plunger Simulator** (`dart_plunger_gui.py`): Spring piston gun simulator
+- **Spring Piston Simulator** (`dart_plunger_gui.py`): Spring piston gun simulator
 
 ## Running from Source
 
@@ -19,14 +19,14 @@ In the terminal run:
 # For the Nomad (precompressed air) simulator
 uv run src/nomad_ui.py
 
-# For the Spring Plunger simulator
+# For the Spring Piston simulator
 uv run src/dart_plunger_gui.py
 ```
 
 Alternatively, you can use the installed scripts:
 ```bash
 uv run nomad-simulator
-uv run spring-plunger-simulator
+uv run spring-piston-simulator
 ```
 
 ## Building Standalone Executables
@@ -51,7 +51,7 @@ See [BUILD.md](BUILD.md) for detailed instructions on:
 ```
 
 The executables will be in the `py-standalone/` directory:
-- **macOS/Linux**: `py-standalone/cpython-*/bin/nomad-simulator` and `spring-plunger-simulator`
-- **Windows**: `py-standalone\cpython-*\Scripts\nomad-simulator.exe` and `spring-plunger-simulator.exe`
+- **macOS/Linux**: `py-standalone/cpython-*/bin/nomad-simulator` and `spring-piston-simulator`
+- **Windows**: `py-standalone\cpython-*\Scripts\nomad-simulator.exe` and `spring-piston-simulator.exe`
 
 The entire `py-standalone` directory is relocatable and can be moved anywhere.

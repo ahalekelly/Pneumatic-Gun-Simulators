@@ -40,11 +40,11 @@ After building, you'll find the executables in the `py-standalone/` directory:
 
 - **macOS/Linux:** `./py-standalone/cpython-*/bin/`
   - `nomad-simulator`
-  - `spring-plunger-simulator`
+  - `spring-piston-simulator`
 
 - **Windows:** `.\py-standalone\cpython-*\Scripts\`
   - `nomad-simulator.exe`
-  - `spring-plunger-simulator.exe`
+  - `spring-piston-simulator.exe`
 
 ### How py-app-standalone Works
 
@@ -96,7 +96,7 @@ Each executable includes:
 
 Available applications:
 - **nomad-simulator**: Precompressed air gun simulator
-- **spring-plunger-simulator**: Spring piston gun simulator
+- **spring-piston-simulator**: Spring piston gun simulator
 
 ## Troubleshooting
 
@@ -145,7 +145,7 @@ If you prefer not to use uv, you can build with regular Python:
 ```bash
 pip install -e ".[build]"
 pyinstaller --onefile --windowed --name nomad-simulator src/nomad_ui.py
-pyinstaller --onefile --windowed --name spring-plunger-simulator src/dart_plunger_gui.py
+pyinstaller --onefile --windowed --name spring-piston-simulator src/dart_plunger_gui.py
 ```
 
 ## Size Optimization

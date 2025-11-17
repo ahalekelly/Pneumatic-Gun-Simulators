@@ -36,15 +36,15 @@ jobs:
       - name: Create distribution archives
         run: |
           cd dist
-          zip -r ../spring-plunger-simulator-macos.zip "Spring Plunger Simulator.app"
+          zip -r ../spring-piston-simulator-macos.zip "Spring Piston Simulator.app"
           zip -r ../nomad-simulator-macos.zip "Nomad Simulator.app"
           cd ..
 
-      - name: Upload Spring Plunger Simulator macOS artifact
+      - name: Upload Spring Piston Simulator macOS artifact
         uses: actions/upload-artifact@v4
         with:
-          name: spring-plunger-simulator-macos
-          path: spring-plunger-simulator-macos.zip
+          name: spring-piston-simulator-macos
+          path: spring-piston-simulator-macos.zip
           retention-days: 30
 
       - name: Upload Nomad Simulator macOS artifact
@@ -96,7 +96,7 @@ jobs:
             --exclude-module scipy.odr `
             --exclude-module scipy.special `
             src/nomad_ui.py
-          uv run pyinstaller --onefile --windowed --name spring-plunger-simulator --icon icons/spring-plunger-icon.ico `
+          uv run pyinstaller --onefile --windowed --name spring-piston-simulator --icon icons/spring-piston-icon.ico `
             --exclude-module scipy.stats `
             --exclude-module scipy.sparse `
             --exclude-module scipy.spatial `
@@ -123,15 +123,15 @@ jobs:
 
       - name: Create distribution archives
         run: |
-          Compress-Archive -Path dist\spring-plunger-simulator.exe -DestinationPath spring-plunger-simulator-windows.zip
+          Compress-Archive -Path dist\spring-piston-simulator.exe -DestinationPath spring-piston-simulator-windows.zip
           Compress-Archive -Path dist\nomad-simulator.exe -DestinationPath nomad-simulator-windows.zip
         shell: pwsh
 
-      - name: Upload Spring Plunger Simulator Windows artifact
+      - name: Upload Spring Piston Simulator Windows artifact
         uses: actions/upload-artifact@v4
         with:
-          name: spring-plunger-simulator-windows
-          path: spring-plunger-simulator-windows.zip
+          name: spring-piston-simulator-windows
+          path: spring-piston-simulator-windows.zip
           retention-days: 30
 
       - name: Upload Nomad Simulator Windows artifact
@@ -153,18 +153,18 @@ jobs:
 
       - name: Prepare release files
         run: |
-          mv spring-plunger-simulator-macos/spring-plunger-simulator-macos.zip .
+          mv spring-piston-simulator-macos/spring-piston-simulator-macos.zip .
           mv nomad-simulator-macos/nomad-simulator-macos.zip .
-          mv spring-plunger-simulator-windows/spring-plunger-simulator-windows.zip .
+          mv spring-piston-simulator-windows/spring-piston-simulator-windows.zip .
           mv nomad-simulator-windows/nomad-simulator-windows.zip .
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            spring-plunger-simulator-macos.zip
+            spring-piston-simulator-macos.zip
             nomad-simulator-macos.zip
-            spring-plunger-simulator-windows.zip
+            spring-piston-simulator-windows.zip
             nomad-simulator-windows.zip
           draft: false
           prerelease: false

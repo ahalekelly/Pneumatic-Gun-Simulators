@@ -58,9 +58,9 @@ Once the workflow completes:
 1. Go to the "Releases" section of your GitHub repository
 2. You should see a new release for your version tag
 3. The release will contain four downloadable files:
-   - `spring-plunger-simulator-macos.zip` - macOS .app bundle
+   - `spring-piston-simulator-macos.zip` - macOS .app bundle
    - `nomad-simulator-macos.zip` - macOS .app bundle
-   - `spring-plunger-simulator-windows.zip` - Windows .exe file
+   - `spring-piston-simulator-windows.zip` - Windows .exe file
    - `nomad-simulator-windows.zip` - Windows .exe file
 
 ### 6. Test the Executables (Recommended)
@@ -70,11 +70,11 @@ Download the artifacts and test them:
 **macOS:**
 ```bash
 # Download and extract each simulator
-unzip spring-plunger-simulator-macos.zip
+unzip spring-piston-simulator-macos.zip
 unzip nomad-simulator-macos.zip
 
 # Run the applications
-open "Spring Plunger Simulator.app"
+open "Spring Piston Simulator.app"
 open "Nomad Simulator.app"
 ```
 
@@ -85,18 +85,18 @@ open "Nomad Simulator.app"
 
 Users can bypass this by right-clicking the .app, selecting "Open", or running:
 ```bash
-xattr -cr "Spring Plunger Simulator.app"
+xattr -cr "Spring Piston Simulator.app"
 xattr -cr "Nomad Simulator.app"
 ```
 
 **Windows:**
 ```powershell
 # Extract each zip file
-Expand-Archive spring-plunger-simulator-windows.zip
+Expand-Archive spring-piston-simulator-windows.zip
 Expand-Archive nomad-simulator-windows.zip
 
 # Run the executables
-.\spring-plunger-simulator.exe
+.\spring-piston-simulator.exe
 .\nomad-simulator.exe
 ```
 
