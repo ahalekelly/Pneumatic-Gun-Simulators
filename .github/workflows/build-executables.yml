@@ -36,22 +36,22 @@ jobs:
       - name: Create distribution archives
         run: |
           cd dist
-          tar -czf ../spring-plunger-simulator-macos.tar.gz "Spring Plunger Simulator.app"
-          tar -czf ../nomad-simulator-macos.tar.gz "Nomad Simulator.app"
+          zip -r ../spring-plunger-simulator-macos.zip "Spring Plunger Simulator.app"
+          zip -r ../nomad-simulator-macos.zip "Nomad Simulator.app"
           cd ..
 
       - name: Upload Spring Plunger Simulator macOS artifact
         uses: actions/upload-artifact@v4
         with:
           name: spring-plunger-simulator-macos
-          path: spring-plunger-simulator-macos.tar.gz
+          path: spring-plunger-simulator-macos.zip
           retention-days: 30
 
       - name: Upload Nomad Simulator macOS artifact
         uses: actions/upload-artifact@v4
         with:
           name: nomad-simulator-macos
-          path: nomad-simulator-macos.tar.gz
+          path: nomad-simulator-macos.zip
           retention-days: 30
 
   build-windows:
@@ -116,8 +116,8 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            spring-plunger-simulator-macos/spring-plunger-simulator-macos.tar.gz
-            nomad-simulator-macos/nomad-simulator-macos.tar.gz
+            spring-plunger-simulator-macos/spring-plunger-simulator-macos.zip
+            nomad-simulator-macos/nomad-simulator-macos.zip
             spring-plunger-simulator-windows/spring-plunger-simulator-windows.zip
             nomad-simulator-windows/nomad-simulator-windows.zip
           draft: false

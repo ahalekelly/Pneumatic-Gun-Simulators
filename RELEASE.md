@@ -58,8 +58,8 @@ Once the workflow completes:
 1. Go to the "Releases" section of your GitHub repository
 2. You should see a new release for your version tag
 3. The release will contain four downloadable files:
-   - `spring-plunger-simulator-macos.tar.gz` - macOS .app bundle
-   - `nomad-simulator-macos.tar.gz` - macOS .app bundle
+   - `spring-plunger-simulator-macos.zip` - macOS .app bundle
+   - `nomad-simulator-macos.zip` - macOS .app bundle
    - `spring-plunger-simulator-windows.zip` - Windows .exe file
    - `nomad-simulator-windows.zip` - Windows .exe file
 
@@ -70,8 +70,8 @@ Download the artifacts and test them:
 **macOS:**
 ```bash
 # Download and extract each simulator
-tar -xzf spring-plunger-simulator-macos.tar.gz
-tar -xzf nomad-simulator-macos.tar.gz
+unzip spring-plunger-simulator-macos.zip
+unzip nomad-simulator-macos.zip
 
 # Run the applications
 open "Spring Plunger Simulator.app"
