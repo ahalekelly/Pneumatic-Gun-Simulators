@@ -22,4 +22,8 @@ dist/
 *.tar.gz
 *.zip
 
+# Generated icon files
+*.ico
+*.icns
+
 .DS_Store
