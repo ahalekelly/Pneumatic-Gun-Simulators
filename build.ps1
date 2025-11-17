@@ -51,7 +51,7 @@ uv run pyinstaller --onefile --windowed --name nomad-simulator --icon icons/noma
     --exclude-module scipy.misc `
     --exclude-module scipy.odr `
     --exclude-module scipy.special `
-    src/nomad_ui.py
+    "Precompressed Air/nomad_ui.py"
 
 Write-Host ""
 Write-Host "Building Spring Piston Simulator executable..."
@@ -72,7 +72,7 @@ uv run pyinstaller --onefile --windowed --name spring-piston-simulator --icon ic
     --exclude-module scipy.misc `
     --exclude-module scipy.odr `
     --exclude-module scipy.special `
-    src/dart_plunger_gui.py
+    "Spring Piston/dart_plunger_gui.py"
 
 Write-Host ""
 Write-Host "Build complete!" -ForegroundColor Green

@@ -144,8 +144,8 @@ If you prefer not to use uv, you can build with regular Python:
 
 ```bash
 pip install -e ".[build]"
-pyinstaller --onefile --windowed --name nomad-simulator src/nomad_ui.py
-pyinstaller --onefile --windowed --name spring-piston-simulator src/dart_plunger_gui.py
+pyinstaller --onefile --windowed --name nomad-simulator "Precompressed Air/nomad_ui.py"
+pyinstaller --onefile --windowed --name spring-piston-simulator "Spring Piston/dart_plunger_gui.py"
 ```
 
 ## Size Optimization

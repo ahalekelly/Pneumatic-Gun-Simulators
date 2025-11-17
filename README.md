@@ -17,16 +17,10 @@ Equations will be posted later, but they are all 1-D lumped parameter simulation
 In the terminal run:
 ```bash
 # For the Nomad (precompressed air) simulator
-uv run src/nomad_ui.py
+uv run "Precompressed Air/nomad_ui.py"
 
 # For the Spring Piston simulator
-uv run src/dart_plunger_gui.py
-```
-
-Alternatively, you can use the installed scripts:
-```bash
-uv run nomad-simulator
-uv run spring-piston-simulator
+uv run "Spring Piston/dart_plunger_gui.py"
 ```
 
 ## Building Standalone Executables

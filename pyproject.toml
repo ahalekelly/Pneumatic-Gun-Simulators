@@ -13,11 +13,8 @@ dependencies = [
 [project.optional-dependencies]
 build = [
     "pyinstaller>=6.0.0",
+    "pillow>=10.0.0",
 ]
-
-[project.scripts]
-nomad-simulator = "nomad_ui:main"
-spring-piston-simulator = "dart_plunger_gui:main"
 
 [tool.uv]
 python-preference = "only-managed"
