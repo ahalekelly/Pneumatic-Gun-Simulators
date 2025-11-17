@@ -31,14 +31,48 @@ Write-Host "Cleaning previous builds..."
 if (Test-Path build) { Remove-Item -Recurse -Force build }
 if (Test-Path dist) { Remove-Item -Recurse -Force dist }
 
-# Build executables
+# Build executables with excluded scipy modules to reduce size
 Write-Host ""
 Write-Host "Building Nomad Simulator executable..."
-uv run pyinstaller --onefile --windowed --name nomad-simulator --icon icons/nomad-icon.ico src/nomad_ui.py
+uv run pyinstaller --onefile --windowed --name nomad-simulator --icon icons/nomad-icon.ico `
+    --exclude-module scipy.stats `
+    --exclude-module scipy.sparse `
+    --exclude-module scipy.spatial `
+    --exclude-module scipy.ndimage `
+    --exclude-module scipy.signal `
+    --exclude-module scipy.fftpack `
+    --exclude-module scipy.linalg `
+    --exclude-module scipy.optimize `
+    --exclude-module scipy.interpolate `
+    --exclude-module scipy.cluster `
+    --exclude-module scipy.constants `
+    --exclude-module scipy.fft `
+    --exclude-module scipy.io `
+    --exclude-module scipy.misc `
+    --exclude-module scipy.odr `
+    --exclude-module scipy.special `
+    src/nomad_ui.py
 
 Write-Host ""
 Write-Host "Building Spring Plunger Simulator executable..."
-uv run pyinstaller --onefile --windowed --name spring-plunger-simulator --icon icons/spring-plunger-icon.ico src/dart_plunger_gui.py
+uv run pyinstaller --onefile --windowed --name spring-plunger-simulator --icon icons/spring-plunger-icon.ico `
+    --exclude-module scipy.stats `
+    --exclude-module scipy.sparse `
+    --exclude-module scipy.spatial `
+    --exclude-module scipy.ndimage `
+    --exclude-module scipy.signal `
+    --exclude-module scipy.fftpack `
+    --exclude-module scipy.linalg `
+    --exclude-module scipy.optimize `
+    --exclude-module scipy.interpolate `
+    --exclude-module scipy.cluster `
+    --exclude-module scipy.constants `
+    --exclude-module scipy.fft `
+    --exclude-module scipy.io `
+    --exclude-module scipy.misc `
+    --exclude-module scipy.odr `
+    --exclude-module scipy.special `
+    src/dart_plunger_gui.py
 
 Write-Host ""
 Write-Host "Build complete!" -ForegroundColor Green
