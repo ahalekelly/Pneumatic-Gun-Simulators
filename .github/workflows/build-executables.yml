@@ -26,7 +26,7 @@ jobs:
 
       - name: Build macOS executables
         run: |
-          uvx py-app-standalone .
+          uvx py-app-standalone . --source-only
 
       - name: List build artifacts
         run: |

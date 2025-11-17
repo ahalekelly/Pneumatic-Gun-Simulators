@@ -23,7 +23,7 @@ rm -rf py-standalone
 
 # Build the standalone distribution from local package
 echo "Building standalone Python environment from local package..."
-uvx py-app-standalone .
+uvx py-app-standalone . --source-only
 
 echo ""
 echo "Build complete!"
