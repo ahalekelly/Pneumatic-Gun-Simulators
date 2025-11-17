@@ -25,18 +25,47 @@ rm -rf py-standalone
 echo "Building standalone Python environment from local package..."
 uvx py-app-standalone . --source-only
 
+# Find the Python installation directory
+PYTHON_DIR=$(find py-standalone -maxdepth 1 -name "cpython-*" -type d | head -1)
+
+if [ -z "$PYTHON_DIR" ]; then
+    echo "Error: Could not find Python installation directory"
+    exit 1
+fi
+
+# Copy the Python UI files into the py-standalone structure
+echo "Copying application files..."
+mkdir -p "$PYTHON_DIR/app"
+cp -R "Precompressed Air" "$PYTHON_DIR/app/"
+cp -R "Spring Piston" "$PYTHON_DIR/app/"
+
+# Create launcher scripts in the bin directory using relative paths
+echo "Creating launcher scripts..."
+
+cat > "$PYTHON_DIR/bin/nomad-simulator" << 'EOF'
+#!/bin/bash
+# Get the directory where this script is located
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+# Run the Python UI file using relative path
+exec "$DIR/python3" "$DIR/../app/Precompressed Air/nomad_ui.py" "$@"
+EOF
+chmod +x "$PYTHON_DIR/bin/nomad-simulator"
+
+cat > "$PYTHON_DIR/bin/spring-piston-simulator" << 'EOF'
+#!/bin/bash
+# Get the directory where this script is located
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+# Run the Python UI file using relative path
+exec "$DIR/python3" "$DIR/../app/Spring Piston/dart_plunger_gui.py" "$@"
+EOF
+chmod +x "$PYTHON_DIR/bin/spring-piston-simulator"
+
+echo "Created launcher scripts in $PYTHON_DIR/bin/"
+
 # On macOS, create .app bundles
 if [[ "$OSTYPE" == "darwin"* ]]; then
     echo ""
     echo "Creating macOS .app bundles..."
-
-    # Find the Python installation directory
-    PYTHON_DIR=$(find py-standalone -maxdepth 1 -name "cpython-*" -type d | head -1)
-
-    if [ -z "$PYTHON_DIR" ]; then
-        echo "Error: Could not find Python installation directory"
-        exit 1
-    fi
 
     # Function to convert PNG to ICNS
     png_to_icns() {
