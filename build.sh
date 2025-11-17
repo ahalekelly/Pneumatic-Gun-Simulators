@@ -109,16 +109,25 @@ log() {
 
 log "========== Starting APPNAME =========="
 log "DIR: $DIR"
-log "Looking for executable: $DIR/../Resources/py-standalone/cpython-*/bin/EXEC_NAME"
 
-# Find the executable
-EXEC_PATH="$DIR/../Resources/py-standalone/cpython-"*"/bin/EXEC_NAME"
-log "Expanded path: $EXEC_PATH"
+# Find the Python directory (expand the glob)
+PYTHON_DIR=$(echo "$DIR/../Resources/py-standalone/cpython-"*)
+log "Python directory: $PYTHON_DIR"
 
-if [ ! -f $EXEC_PATH ]; then
+# Set the executable path
+EXEC_PATH="$PYTHON_DIR/bin/EXEC_NAME"
+log "Executable path: $EXEC_PATH"
+
+if [ ! -f "$EXEC_PATH" ]; then
     log "ERROR: Executable not found at $EXEC_PATH"
-    log "Contents of bin directory:"
-    ls -la "$DIR/../Resources/py-standalone/cpython-"*"/bin/" >> "$LOG_FILE" 2>&1
+    log "Contents of Resources directory:"
+    ls -la "$DIR/../Resources/" >> "$LOG_FILE" 2>&1
+    log "Contents of py-standalone directory:"
+    ls -la "$DIR/../Resources/py-standalone/" >> "$LOG_FILE" 2>&1
+    if [ -d "$PYTHON_DIR/bin" ]; then
+        log "Contents of bin directory:"
+        ls -la "$PYTHON_DIR/bin/" >> "$LOG_FILE" 2>&1
+    fi
     exit 1
 fi
 
